@@ -14,6 +14,6 @@ An attempt to mimic functionality of the ReorderableList within Unity while addi
 
 ## Usage
 
-There are 2 ways to use the ReorderableList:
-Create a custom Editor for your class and create a ReorderableList pointing to your serializedProperty
-Create custom list class which extends from ReorderableArray<T>, assign [Reorderable] attribute above property (not class).
+There are 2 ways to use the ReorderableList
+1. Create a custom Editor for your class and create a ReorderableList pointing to your serializedProperty
+2. Create custom list class which extends from ReorderableArray<T>, assign [Reorderable] attribute above property (not class).
