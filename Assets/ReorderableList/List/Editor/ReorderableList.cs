@@ -974,7 +974,7 @@ namespace Malee.Editor {
 				//if there's something, check if the header has been pressed if the element is expandable
 				//if we did press the header, then override the control
 
-				if (rect.Contains(evt.mousePosition) && evt.button == 0) {
+				if (rect.Contains(evt.mousePosition) && IsSelectionButton(evt)) {
 
 					int index = GetSelectionIndex(evt.mousePosition);
 
@@ -1015,7 +1015,7 @@ namespace Malee.Editor {
 
 				case EventType.MouseDown:
 
-					if (rect.Contains(evt.mousePosition) && evt.button == 0 && (captureFocus || GUIUtility.keyboardControl == 0 || GUIUtility.keyboardControl == controlID)) {
+					if (rect.Contains(evt.mousePosition) && IsSelectionButton(evt) && ((captureFocus || evt.button == 2) || GUIUtility.keyboardControl == 0 || GUIUtility.keyboardControl == controlID)) {
 
 						int index = GetSelectionIndex(evt.mousePosition);
 
@@ -1133,6 +1133,11 @@ namespace Malee.Editor {
 
 					break;
 			}
+		}
+
+		private bool IsSelectionButton(Event evt) {
+
+			return evt.button == 0 || evt.button == 2;
 		}
 
 		private void DoSelection(int index, Event evt) {
