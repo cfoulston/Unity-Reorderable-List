@@ -57,6 +57,7 @@ namespace Malee.Editor {
 		public float footerHeight;
 		public float slideEasing;
 		public bool showDefaultBackground;
+		public bool captureFocus;
 		public ElementDisplayType elementDisplayType;
 		public string elementNameProperty;
 		public Texture elementIcon;
@@ -95,10 +96,22 @@ namespace Malee.Editor {
 			}
 			else if (!list.isArray) {
 
-				throw new InvalidListException();
-			}			
+				//check if user passed in a ReorderableArray, if so, that becomes the list object
 
-			this.list = list;
+				SerializedProperty array = list.FindPropertyRelative("array");
+
+				if (array == null || !array.isArray) {
+
+					throw new InvalidListException();
+				}
+
+				this.list = array;
+			}
+			else {
+
+				this.list = list;
+			}
+
 			this.canAdd = canAdd;
 			this.canRemove = canRemove;
 			this.draggable = draggable;
@@ -115,6 +128,7 @@ namespace Malee.Editor {
 			slideEasing = 0.15f;
 			expandable = true;
 			showDefaultBackground = true;
+			captureFocus = false;
 			multipleSelection = true;
 			elementLabel = new GUIContent();
 
@@ -184,10 +198,7 @@ namespace Malee.Editor {
 			EditorGUI.indentLevel = 0;
 
 			Rect headerRect = rect;
-			headerRect.height = headerHeight;
-
-			controlID = GUIUtility.GetControlID(selectionHash, FocusType.Keyboard, rect);
-			dragDropControlID = GUIUtility.GetControlID(dragAndDropHash, FocusType.Passive, rect);
+			headerRect.height = headerHeight;			
 
 			if (!HasList) {
 
@@ -195,9 +206,12 @@ namespace Malee.Editor {
 			}
 			else {
 
+				controlID = GUIUtility.GetControlID(selectionHash, FocusType.Keyboard, rect);
+				dragDropControlID = GUIUtility.GetControlID(dragAndDropHash, FocusType.Passive, rect);
+
 				DrawHeader(headerRect, label);
 
-				if (list.isExpanded) {
+				if (list.isExpanded) {					
 
 					Rect elementBackgroundRect = rect;
 					elementBackgroundRect.yMin = headerRect.yMax;
@@ -216,8 +230,17 @@ namespace Malee.Editor {
 					if (list.arraySize > 0) {
 
 						UpdateElementRects(elementBackgroundRect, evt);
-						HandleDraggingAndSelection(elementBackgroundRect, evt);
-						DrawElements(elementBackgroundRect, evt);
+
+						if (elementRects.Length > 0) {
+
+							Rect selectableRect = elementBackgroundRect;
+							selectableRect.yMin = elementRects[0].yMin;
+							selectableRect.yMax = elementRects[elementRects.Length - 1].yMax;
+
+							HandlePreSelection(selectableRect, evt);
+							DrawElements(elementBackgroundRect, evt);
+							HandlePostSelection(selectableRect, evt);
+						}
 					}
 					else {
 
@@ -650,15 +673,6 @@ namespace Malee.Editor {
 			}
 		}
 
-		private GUIContent GetPropertyLabel(SerializedProperty property) {
-
-			elementLabel.text = property.displayName;
-			elementLabel.tooltip = property.tooltip;
-			elementLabel.image = null;
-
-			return elementLabel;
-		}
-
 		private GUIContent GetElementLabel(SerializedProperty element) {
 
 			string name;
@@ -679,7 +693,7 @@ namespace Malee.Editor {
 			return elementLabel;
 		}
 
-		private string GetElementName(SerializedProperty element, string nameProperty) {
+		private static string GetElementName(SerializedProperty element, string nameProperty) {
 
 			if (string.IsNullOrEmpty(nameProperty)) {
 
@@ -951,61 +965,20 @@ namespace Malee.Editor {
 			DispatchChange();
 		}
 
-		private void HandleDraggingAndSelection(Rect rect, Event evt) {
+		private void HandlePreSelection(Rect rect, Event evt) {
 
-			int len = elementRects.Length;
+			if (evt.type == EventType.MouseDown) {
 
-			if (len <= 0) {
+				//check if we contain the mouse press
+				//we also need to check what has current focus. If nothing we can assume control
+				//if there's something, check if the header has been pressed if the element is expandable
+				//if we did press the header, then override the control
 
-				return;
-			}
+				if (rect.Contains(evt.mousePosition) && evt.button == 0) {
 
-			rect.yMin = elementRects[0].yMin;
-			rect.yMax = elementRects[len - 1].yMax;
+					int index = GetSelectionIndex(evt.mousePosition);
 
-			switch (evt.GetTypeForControl(controlID)) {
-
-				case EventType.MouseDown:
-
-					if (rect.Contains(evt.mousePosition) && evt.button == 0) {
-
-						int index = GetSelectionIndex(evt.mousePosition);
-
-						if (CanSelect(index)) {
-
-							//append selections based on action, this may be a additive (ctrl) or range (shift) selection
-
-							if (multipleSelection) {
-
-								selection.AppendWithAction(pressIndex = index, evt);
-							}
-							else {
-
-								selection.Select(pressIndex = index);
-							}
-
-							if (onSelectCallback != null) {
-
-								onSelectCallback(this);
-							}
-
-							if (draggable) {
-
-								dragMoved = false;
-								dragPosition = evt.mousePosition.y;
-								dragList = GetDragList(dragPosition);
-
-								beforeDragSelection = selection.Clone();
-
-								GUIUtility.hotControl = controlID;
-							}
-						}
-						else {
-
-							selection.Clear();
-						}
-
-						GUIUtility.keyboardControl = controlID;
+					if (CanSelect(index)) {
 
 						SerializedProperty element = list.GetArrayElementAtIndex(index);
 
@@ -1020,8 +993,39 @@ namespace Malee.Editor {
 
 							if (elementHeaderRect.Contains(evt.mousePosition) && !elementExpandRect.Contains(evt.mousePosition)) {
 
-								evt.Use();
+								DoSelection(index, evt);
+								HandleUtility.Repaint();
 							}
+						}
+					}
+				}
+			}
+			else if (evt.type == EventType.MouseDrag && draggable && GUIUtility.hotControl == controlID) {
+
+				UpdateDragPosition(evt.mousePosition, rect, dragList);
+
+				evt.Use();
+				dragging = true;
+			}
+		}
+
+		private void HandlePostSelection(Rect rect, Event evt) {
+
+			switch (evt.GetTypeForControl(controlID)) {
+
+				case EventType.MouseDown:
+
+					if (rect.Contains(evt.mousePosition) && evt.button == 0 && (captureFocus || GUIUtility.keyboardControl == 0 || GUIUtility.keyboardControl == controlID)) {
+
+						int index = GetSelectionIndex(evt.mousePosition);
+
+						if (CanSelect(index)) {
+
+							DoSelection(index, evt);
+						}
+						else {
+
+							selection.Clear();
 						}
 
 						HandleUtility.Repaint();
@@ -1104,20 +1108,6 @@ namespace Malee.Editor {
 
 					break;
 
-				case EventType.MouseDrag:
-
-					if (draggable && GUIUtility.hotControl == controlID) {
-
-						GUIUtility.keyboardControl = controlID;
-
-						UpdateDragPosition(evt.mousePosition, rect, dragList);
-
-						evt.Use();
-						dragging = true;
-					}
-
-					break;
-
 				case EventType.KeyDown:
 
 					if (GUIUtility.keyboardControl == controlID) {
@@ -1143,6 +1133,39 @@ namespace Malee.Editor {
 
 					break;
 			}
+		}
+
+		private void DoSelection(int index, Event evt) {
+
+			//append selections based on action, this may be a additive (ctrl) or range (shift) selection
+
+			if (multipleSelection) {
+
+				selection.AppendWithAction(pressIndex = index, evt);
+			}
+			else {
+
+				selection.Select(pressIndex = index);
+			}
+
+			if (onSelectCallback != null) {
+
+				onSelectCallback(this);
+			}
+
+			if (draggable) {
+
+				dragMoved = false;
+				dragPosition = evt.mousePosition.y;
+				dragList = GetDragList(dragPosition);
+
+				beforeDragSelection = selection.Clone();
+
+				GUIUtility.hotControl = controlID;
+			}
+
+			GUIUtility.keyboardControl = controlID;
+			evt.Use();
 		}
 
 		private List<DragElement> GetDragList(float dragPosition) {
@@ -1171,6 +1194,8 @@ namespace Malee.Editor {
 		}
 
 		private void UpdateDragPosition(Vector2 position, Rect bounds, List<DragElement> dragList) {
+
+			//TODO When dragging at very high speeds this breaks down. Need to fix
 
 			//find new drag position
 
@@ -1338,7 +1363,7 @@ namespace Malee.Editor {
 
 				case ElementDisplayType.Auto:
 
-					return element.hasChildren && element.propertyType != SerializedPropertyType.ObjectReference;
+					return element.hasVisibleChildren && element.propertyType != SerializedPropertyType.ObjectReference;
 
 				case ElementDisplayType.Expandable:
 

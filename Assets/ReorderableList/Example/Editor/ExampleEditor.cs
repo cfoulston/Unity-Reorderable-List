@@ -38,12 +38,11 @@ public class ExampleEditor : Editor {
 		//Caching the property is recommended
 		EditorGUILayout.PropertyField(list2);
 
-		//Still works, but there are some minor issues with selection state as properties can only be referenced by propertyPath
-		//And if that propertyPath changes (by array modification) then the list will be either rebuilt or point to a different reference
-		//EditorGUILayout.PropertyField(serializedObject.FindProperty("list2"));
-
 		//draw the final list, the element name is supplied through the callback defined above "GetList3ElementName"
 		list3.DoLayoutList();
+
+		//Draw without caching property
+		EditorGUILayout.PropertyField(serializedObject.FindProperty("list4"));
 
 		serializedObject.ApplyModifiedProperties();
 	}

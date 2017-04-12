@@ -7,10 +7,14 @@ public class Example : MonoBehaviour {
 	
 	public List<ExampleChild> list1;
 
-	[Reorderable(elementNameProperty = "layerMask")]
+	[Reorderable]
 	public ExampleChildList list2;
 
-	public List<ExampleChild> list3;
+	[Reorderable]
+	public ExampleChildList list3;
+
+	[Reorderable]
+	public StringList list4;
 
 	[System.Serializable]
 	public class ExampleChild {
@@ -29,5 +33,9 @@ public class Example : MonoBehaviour {
 
 	[System.Serializable]
 	public class ExampleChildList : ReorderableArray<ExampleChild> {
+	}
+
+	[System.Serializable]
+	public class StringList : ReorderableArray<string> {
 	}
 }

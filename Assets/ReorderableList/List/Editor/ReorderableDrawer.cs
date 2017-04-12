@@ -7,18 +7,18 @@ namespace Malee.Editor {
 	[CustomPropertyDrawer(typeof(ReorderableAttribute))]
 	public class ReorderableDrawer : PropertyDrawer {
 
-		private Dictionary<int, ReorderableList> lists = new Dictionary<int, ReorderableList>();
+		private static Dictionary<int, ReorderableList> lists = new Dictionary<int, ReorderableList>();
 
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
 
-			ReorderableList list = GetList(property, GetListId(property));
+			ReorderableList list = GetList(property, attribute as ReorderableAttribute);
 
 			return list != null ? list.GetHeight() : EditorGUIUtility.singleLineHeight;
 		}		
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 
-			ReorderableList list = GetList(property, GetListId(property));
+			ReorderableList list = GetList(property, attribute as ReorderableAttribute);
 
 			if (list != null) {
 
@@ -30,38 +30,53 @@ namespace Malee.Editor {
 			}
 		}
 
-		private ReorderableList GetList(SerializedProperty property, int id) {
+		public static int GetListId(SerializedProperty property) {
 
-			return GetList(property, attribute as ReorderableAttribute, id, ref lists);
+			if (property != null) {
+
+				int h1 = property.serializedObject.targetObject.GetHashCode();
+				int h2 = property.propertyPath.GetHashCode();
+
+				return (((h1 << 5) + h1) ^ h2);
+			}
+
+			return 0;
 		}
 
-		//
-		// -- INTERNAL --
-		//
+		public static ReorderableList GetList(SerializedProperty property) {
 
-		internal static int GetListId(SerializedProperty property) {
-
-			return CombineHashCodes(property.serializedObject.targetObject.GetHashCode(), property.propertyPath.GetHashCode());
+			return GetList(property, null, GetListId(property));
 		}
 
-		internal static ReorderableList GetList(SerializedProperty property, int id, ref Dictionary<int, ReorderableList> lists) {
+		public static ReorderableList GetList(SerializedProperty property, ReorderableAttribute attrib) {
 
-			return GetList(property, null, id, ref lists);
+			return GetList(property, attrib, GetListId(property));
 		}
 
-		internal static ReorderableList GetList(SerializedProperty property, ReorderableAttribute attrib, int id, ref Dictionary<int, ReorderableList> lists) {
+		public static ReorderableList GetList(SerializedProperty property, int id) {
 
-			SerializedProperty array;
+			return GetList(property, null, id);
+		}
+
+		public static ReorderableList GetList(SerializedProperty property, ReorderableAttribute attrib, int id) {
+
+			if (property == null) {
+
+				return null;
+			}
 
 			ReorderableList list = null;
+			SerializedProperty array = property.FindPropertyRelative("array");
 
-			if (IsValid(property, out array)) {
+			if (array != null && array.isArray) {
 
 				if (!lists.TryGetValue(id, out list)) {
 
 					if (attrib != null) {
 
-						list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, ReorderableList.ElementDisplayType.Auto, attrib.elementNameProperty, GetIcon(attrib.elementIconPath));
+						Texture icon = !string.IsNullOrEmpty(attrib.elementIconPath) ? AssetDatabase.GetCachedIcon(attrib.elementIconPath) : null;
+
+						list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, ReorderableList.ElementDisplayType.Auto, attrib.elementNameProperty, icon);
 					}
 					else {
 
@@ -77,27 +92,6 @@ namespace Malee.Editor {
 			}
 
 			return list;
-		}
-
-		//
-		// -- PRIVATE --
-		//
-
-		private static bool IsValid(SerializedProperty property, out SerializedProperty array) {
-
-			array = property.FindPropertyRelative("array");
-
-			return array != null ? array.isArray : false;
-		}
-
-		private static Texture GetIcon(string path) {
-
-			return !string.IsNullOrEmpty(path) ? AssetDatabase.GetCachedIcon(path) : null;
-		}
-
-		private static int CombineHashCodes(int h1, int h2) {
-
-			return (((h1 << 5) + h1) ^ h2);
 		}
 	}
 }
