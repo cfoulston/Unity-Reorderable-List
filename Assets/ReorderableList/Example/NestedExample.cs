@@ -12,21 +12,17 @@ public class NestedExample : MonoBehaviour {
 	public class ExampleChild {
 
 		[Reorderable]
-		public NestedStringList nested;
+		public NestedChildList nested;
 	}
 
 	[System.Serializable]
 	public class NestedChild {
 
-		public string myElementName;
+		public float myValue;
 	}	
 
 	[System.Serializable]
 	public class ExampleChildList : ReorderableArray<ExampleChild> {
-	}
-
-	[System.Serializable]
-	public class NestedStringList : ReorderableArray<string> {
 	}
 
 	[System.Serializable]

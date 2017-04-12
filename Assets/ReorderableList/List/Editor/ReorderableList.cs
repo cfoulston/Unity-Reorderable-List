@@ -60,6 +60,7 @@ namespace Malee.Editor {
 		public bool captureFocus;
 		public ElementDisplayType elementDisplayType;
 		public string elementNameProperty;
+		public string elementNameOverride;
 		public Texture elementIcon;
 
 		internal readonly int id;
@@ -85,10 +86,14 @@ namespace Malee.Editor {
 		}
 
 		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable)
-			: this(list, canAdd, canRemove, draggable, ElementDisplayType.Auto, null, null) {
+			: this(list, canAdd, canRemove, draggable, ElementDisplayType.Auto, null, null, null) {
 		}
 
-		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable, ElementDisplayType elementDisplayType, string elementNameProperty, Texture elementIcon) {
+		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable, ElementDisplayType elementDisplayType, string elementNameProperty, Texture elementIcon) 
+			: this(list, canAdd, canRemove, draggable, elementDisplayType, elementNameProperty, null, elementIcon) {
+		}
+
+		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable, ElementDisplayType elementDisplayType, string elementNameProperty, string elementNameOverride, Texture elementIcon) {
 
 			if (list == null) {
 
@@ -117,6 +122,7 @@ namespace Malee.Editor {
 			this.draggable = draggable;
 			this.elementDisplayType = elementDisplayType;
 			this.elementNameProperty = elementNameProperty;
+			this.elementNameOverride = elementNameOverride;
 			this.elementIcon = elementIcon;
 
 			id = GetHashCode();
@@ -683,7 +689,7 @@ namespace Malee.Editor {
 			}
 			else {
 
-				name = GetElementName(element, elementNameProperty);
+				name = GetElementName(element, elementNameProperty, elementNameOverride);
 			}
 
 			elementLabel.text = !string.IsNullOrEmpty(name) ? name : element.displayName;
@@ -693,9 +699,22 @@ namespace Malee.Editor {
 			return elementLabel;
 		}
 
-		private static string GetElementName(SerializedProperty element, string nameProperty) {
+		private static string GetElementName(SerializedProperty element, string nameProperty, string nameOverride) {
 
-			if (string.IsNullOrEmpty(nameProperty)) {
+			if (!string.IsNullOrEmpty(nameOverride)) {
+
+				string path = element.propertyPath;
+
+				if (path.EndsWith("]")) {
+
+					int startIndex = path.LastIndexOf('[') + 1;
+
+					return string.Concat(nameOverride, " ", path.Substring(startIndex, path.Length - startIndex - 1));
+				}
+
+				return nameOverride;
+			}
+			else if (string.IsNullOrEmpty(nameProperty)) {
 
 				return null;
 			}
