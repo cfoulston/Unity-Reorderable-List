@@ -76,7 +76,7 @@ namespace Malee.Editor {
 		private bool dragging;
 		private bool dragMoved;
 		private float dragPosition;
-		private List<DragElement> dragList;
+		private DragElement[] dragList;
 		private ListSelection beforeDragSelection;
 		
 		private int dragDropControlID = -1;		
@@ -134,7 +134,7 @@ namespace Malee.Editor {
 			slideEasing = 0.15f;
 			expandable = true;
 			showDefaultBackground = true;
-			captureFocus = false;
+			captureFocus = true;
 			multipleSelection = true;
 			elementLabel = new GUIContent();
 
@@ -235,7 +235,12 @@ namespace Malee.Editor {
 
 					if (list.arraySize > 0) {
 
-						UpdateElementRects(elementBackgroundRect, evt);
+						//update element rects if not dragging. Dragging caches draw rects so no need to update
+
+						if (!dragging) {
+
+							UpdateElementRects(elementBackgroundRect, evt);
+						}
 
 						if (elementRects.Length > 0) {
 
@@ -542,7 +547,7 @@ namespace Malee.Editor {
 
 			//resize array if elements changed
 
-			int i, len = dragging ? dragList.Count : list.arraySize;
+			int i, len = list.arraySize;
 
 			if (len != elementRects.Length) {
 
@@ -558,9 +563,7 @@ namespace Malee.Editor {
 
 				for (i = 0; i < len; i++) {
 
-					//if dragging, use the element in the temporary drag list as this list will re-order as the user drags an item
-
-					SerializedProperty element = dragging ? dragList[i].element : list.GetArrayElementAtIndex(i);
+					SerializedProperty element = list.GetArrayElementAtIndex(i);
 
 					//update the elementRects value for this object. Grab the last elementRect for startPosition
 
@@ -571,7 +574,7 @@ namespace Malee.Editor {
 			}
 		}
 
-		private void DrawElements(Rect rect, Event evt) {			
+		private void DrawElements(Rect rect, Event evt) {
 
 			//draw list background
 
@@ -580,53 +583,68 @@ namespace Malee.Editor {
 				Style.boxBackground.Draw(rect, false, false, false, false);
 			}
 			
-			//only draw dragging elements when repainting
+			//if not dragging, draw elements as usual
 
-			if (dragging && evt.type != EventType.Repaint) {
+			if (!dragging) {
 
-				return;
+				int i, len = list.arraySize;
+
+				for (i = 0; i < len; i++) { 
+
+					bool selected = selection.Contains(i);
+
+					DrawElement(list.GetArrayElementAtIndex(i), GetElementDrawRect(i, elementRects[i]), selected, selected && GUIUtility.keyboardControl == controlID);
+				}
 			}
+			else if (evt.type == EventType.Repaint) {
 
-			//draw elements
+				//draw dragging elements only when repainting
 
-			int i = dragging ? dragList.Count : list.arraySize;
+				int i, s, len = dragList.Length;
+				int sLen = selection.Length;
 
-			while (--i > -1) { 
-				
-				//if dragging, use the element in the temporary drag list as this list will re-order as the user drags an item
+				for (i = 0; i < len; i++) { 					
 
-				SerializedProperty element = dragging ? dragList[i].element : list.GetArrayElementAtIndex(i);
-
-				//don't draw the any dragging elements here
-
-				bool isSelected = selection.Contains(i);
-
-				if (dragging && isSelected) {
-
-					continue;
-				}		
+					DragElement element = dragList[i];
 					
-				bool selected = !dragging ? isSelected : false;
+					//draw the element if its not in the selection
 
-				DrawElement(element, GetElementDrawRect(i, elementRects[i]), selected, selected && GUIUtility.keyboardControl == controlID);
-			}
+					if (!element.selected) {
 
-			//draw dragging element last, above other items
+						float middle = element.rect.y + element.rect.height / 2;
+						float top = element.rect.yMin;
 
-			if (dragging) {
+						for (s = 0; s < sLen; s++) {
 
-				//because elementRects are static rects representing indexed positions, make a copy here and move it based on the drag position
+							DragElement selected = dragList[s];
 
-				int n = selection.Length;
+							if (selected.rect.Overlaps(element.rect)) {
 
-				while (--n > -1) { 
+								GUI.Box(element.rect, GUIContent.none);
+							}
+						}
 
-					int index = selection[n];
+						DrawElement(element.property, GetElementDrawRect(i, element.rect), false, false && GUIUtility.keyboardControl == controlID);
+					}
+					else {
 
-					Rect dragRect = elementRects[index];
-					dragRect.y = dragPosition - dragList[index].dragOffset;
+						//update the element rect if selected. Selected elements appear first in the dragList, so other elements later in iteration will have rects to compare
 
-					DrawElement(dragList[index].element, dragRect, true, true);
+						element.rect.x = 30;
+						element.rect.y = dragPosition - element.dragOffset;
+						dragList[i] = element;
+					}
+				}
+
+				//draw the selected elements last
+
+				len = sLen;
+
+				for (i = 0; i < len; i++) {
+
+					DragElement element = dragList[i];
+
+					DrawElement(element.property, element.rect, true, true);
 				}
 			}
 		}
@@ -1085,15 +1103,6 @@ namespace Malee.Editor {
 								list.MoveArrayElement(dragList[selectionIndex].startIndex, selectionIndex);
 							}
 
-							//restore state
-
-							for (int i = 0; i < dragList.Count; i++) {
-
-								dragList[i].RestoreState(list.GetArrayElementAtIndex(i));
-							}
-
-							dragList.Clear();
-
 							//apply changes
 
 							list.serializedObject.ApplyModifiedProperties();
@@ -1107,8 +1116,6 @@ namespace Malee.Editor {
 							DispatchChange();
 						}
 						else {
-
-							dragList.Clear();
 
 							//if we didn't drag, then select the original pressed object
 
@@ -1131,12 +1138,12 @@ namespace Malee.Editor {
 
 					if (GUIUtility.keyboardControl == controlID) {
 
-						if (evt.keyCode == KeyCode.DownArrow) {
+						if (evt.keyCode == KeyCode.DownArrow && !dragging) {
 
 							selection.Select(Mathf.Min(selection.Last + 1, list.arraySize - 1));
 							evt.Use();
 						}
-						else if (evt.keyCode == KeyCode.UpArrow) {
+						else if (evt.keyCode == KeyCode.UpArrow && !dragging) {
 
 							selection.Select(Mathf.Max(selection.Last - 1, 0));
 							evt.Use();
@@ -1144,8 +1151,13 @@ namespace Malee.Editor {
 						else if (evt.keyCode == KeyCode.Escape && GUIUtility.hotControl == controlID) {
 
 							GUIUtility.hotControl = 0;
-							dragging = false;
-							selection = beforeDragSelection;
+
+							if (dragging) {
+
+								dragging = false;
+								selection = beforeDragSelection;
+							}
+
 							evt.Use();
 						}
 					}
@@ -1192,50 +1204,77 @@ namespace Malee.Editor {
 			evt.Use();
 		}
 
-		private List<DragElement> GetDragList(float dragPosition) {
+		private DragElement[] GetDragList(float dragPosition) {
 
-			dragList = dragList ?? new List<DragElement>();
-			dragList.Clear();
+			int i, len = list.arraySize;
 
-			for (int i = 0; i < list.arraySize; i++) {
+			if (dragList == null) {
 
-				SerializedProperty element = list.GetArrayElementAtIndex(i);
+				dragList = new DragElement[len];
+			}
+			else if (dragList.Length != len) {
+
+				System.Array.Resize(ref dragList, len);
+			}
+
+			for (i = 0; i < len; i++) {
+
+				SerializedProperty property = list.GetArrayElementAtIndex(i);
 				Rect elementRect = elementRects[i];
 
 				DragElement dragElement = new DragElement() {
-					element = element,
+					property = property,
 					dragOffset = dragPosition - elementRect.y,
-					height = elementRect.height,
+					rect = elementRect,
+					selected = selection.Contains(i),
 					startIndex = i
 				};
 
-				dragElement.RecordState();
-
-				dragList.Add(dragElement);
+				dragList[i] = dragElement;
 			}
+
+			//finally, sort the dragList by selection, selected objects appear first in the list
+			//selection order is preserved as well
+
+			System.Array.Sort(dragList, (a, b) => {
+
+				if (b.selected) {
+
+					return a.selected ? a.startIndex.CompareTo(b.startIndex) : 1;
+				}
+				else if (a.selected) {
+
+					return b.selected ? b.startIndex.CompareTo(a.startIndex) : -1;
+				}
+				else {
+
+					return a.startIndex.CompareTo(b.startIndex);
+				}
+			});
 
 			return dragList;
 		}
 
-		private void UpdateDragPosition(Vector2 position, Rect bounds, List<DragElement> dragList) {
-
-			//TODO When dragging at very high speeds this breaks down. Need to fix
+		private void UpdateDragPosition(Vector2 position, Rect bounds, DragElement[] dragList) {
 
 			//find new drag position
 
-			float oldPosition = dragPosition;
-			float minOffset = dragList[selection.Min].dragOffset;
-			float maxOffset = dragList[selection.Max].height - dragList[selection.Max].dragOffset;
+			int startIndex = 0;
+			int endIndex = selection.Length - 1;
+
+			float minOffset = dragList[startIndex].dragOffset;
+			float maxOffset = dragList[endIndex].rect.height - dragList[endIndex].dragOffset;
 
 			dragPosition = Mathf.Clamp(position.y, bounds.yMin + minOffset, bounds.yMax - maxOffset);
 
+			/*
 			//check if changed
 
 			if (dragList != null && dragPosition != oldPosition) {
 
 				//get the interation direction with start and end points
 
-				int i, len = dragList.Count;
+				int i, len = dragList.Length;
 				int dir = (int)Mathf.Sign(dragPosition - oldPosition);
 
 				int start = dir == 1 ? 0 : len - 1;
@@ -1252,9 +1291,13 @@ namespace Malee.Editor {
 
 				selection.Sort();
 
+				Debug.Log("UPDATE");
+
 				for (s = selectionStart; s != selectionEnd; s -= dir) {
 
 					int selectionIndex = selection[s];
+
+					Debug.Log(selectionIndex);
 
 					//find the min and max positions of this selected item, we need to know where this item moved from and move to
 					//to compare with dragList elements
@@ -1271,15 +1314,19 @@ namespace Malee.Editor {
 
 						//don't consider already selected items
 
-						if (!selection.Contains(i)) {
+						if (!selection.Contains(i)) {							
 
 							//swap the selected item if it's within the dragList item
 
 							Rect elementRect = elementRects[i];
 
+							//Debug.Log("Checking element " + i + " " + elementRect);
+
 							float middle = elementRect.y + elementRect.height / 2;
 
 							if (minPos < middle && maxPos > middle) {
+
+								Debug.Log(i + " is inside");
 
 								//move items in dragList
 
@@ -1303,6 +1350,7 @@ namespace Malee.Editor {
 
 				selection.Sort();
 			}
+			*/
 		}
 
 		private int GetSelectionIndex(Vector2 position) {
@@ -1445,13 +1493,15 @@ namespace Malee.Editor {
 		// -- DRAG ELEMENT --
 		//
 
-		class DragElement {
+		struct DragElement {
 
-			public SerializedProperty element;
+			public SerializedProperty property;
 			public int startIndex;
 			public float dragOffset;
-			public float height;
+			public bool selected;
+			public Rect rect;
 
+			/*
 			private bool isExpanded;
 			private Dictionary<int, bool> states;
 
@@ -1493,6 +1543,7 @@ namespace Malee.Editor {
 					}
 				}
 			}
+			*/
 		}
 
 		//
@@ -1596,16 +1647,6 @@ namespace Malee.Editor {
 			public int Length {
 
 				get { return indexes.Count; }
-			}
-
-			public int Min {
-				
-				get { return indexes.Min(); }
-			}
-
-			public int Max {
-				
-				get { return indexes.Max(); }
 			}
 
 			public int this[int index] {
