@@ -1358,25 +1358,6 @@ namespace Malee.Editor {
 		private bool CanSelect(ListSelection selection) {
 
 			return selection.Length > 0 ? selection.All(s => CanSelect(s)) : false;
-
-			/*
-			int i, len = selection.Length;
-
-			if (len == 0) {
-
-				return false;
-			}
-
-			for (i = 0; i < len; i++) {
-
-				if (!CanSelect(selection[i])) {
-
-					return false;
-				}
-			}
-
-			return true;
-			*/
 		}
 
 		private bool CanSelect(int index) {
@@ -1387,43 +1368,11 @@ namespace Malee.Editor {
 		private bool CanSelect(Vector2 position) {
 
 			return selection.Length > 0 ? selection.Any(s => IsPositionWithinElement(position, s)) : false;
-
-			/*
-			int i, len = selection.Length;
-
-			if (len == 0) {
-
-				return false;
-			}
-
-			for (i = 0; i < len; i++) {
-
-				if (IsPositionWithinElement(position, selection[i])) {
-
-					return true;
-				}
-			}
-
-			return false;
-			*/
 		}
 
 		private bool IsPositionWithinElement(Vector2 position, int index) {
 
 			return CanSelect(index) ? elementRects[index].Contains(position) : false;
-
-			/*
-			if (CanSelect(index)) {
-
-				Rect elementRect = elementRects[index];
-
-				return elementRect.Contains(position);
-			}
-			else {
-
-				return false;
-			}
-			*/
 		}
 
 		private bool IsElementExpandable(SerializedProperty element) {
