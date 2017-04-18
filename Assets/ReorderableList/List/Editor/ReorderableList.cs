@@ -1,5 +1,7 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -56,7 +58,6 @@ namespace Malee.Editor {
 		public float footerHeight;
 		public float slideEasing;
 		public bool showDefaultBackground;
-		public bool captureFocus;
 		public ElementDisplayType elementDisplayType;
 		public string elementNameProperty;
 		public string elementNameOverride;
@@ -134,7 +135,6 @@ namespace Malee.Editor {
 			slideEasing = 0.15f;
 			expandable = true;
 			showDefaultBackground = true;
-			captureFocus = true;
 			multipleSelection = true;
 			elementLabel = new GUIContent();
 
@@ -894,7 +894,7 @@ namespace Malee.Editor {
 
 			if (element.isInstantiatedPrefab) {
 
-				menu.AddItem(new GUIContent("Revert Value to Prefab"), false, selection.RevertValues, list);
+				menu.AddItem(new GUIContent("Revert " + GetElementLabel(element).text + " to Prefab"), false, selection.RevertValues, list);
 				menu.AddSeparator(string.Empty);
 			}
 
@@ -1045,7 +1045,7 @@ namespace Malee.Editor {
 
 							if (elementHeaderRect.Contains(evt.mousePosition) && !elementExpandRect.Contains(evt.mousePosition)) {
 
-								DoSelection(index, evt);
+								DoSelection(index, true, evt);
 								HandleUtility.Repaint();
 							}
 						}
@@ -1054,8 +1054,9 @@ namespace Malee.Editor {
 			}
 			else if (evt.type == EventType.MouseDrag && draggable && GUIUtility.hotControl == controlID) {
 
-				if (UpdateDragPosition(evt.mousePosition, rect, dragList)) {
+				if (selection.Length > 0 && UpdateDragPosition(evt.mousePosition, rect, dragList)) {
 
+					GUIUtility.keyboardControl = controlID;
 					dragging = true;
 				}
 
@@ -1069,13 +1070,13 @@ namespace Malee.Editor {
 
 				case EventType.MouseDown:
 
-					if (rect.Contains(evt.mousePosition) && IsSelectionButton(evt) && ((captureFocus || evt.button == 2) || GUIUtility.keyboardControl == 0 || GUIUtility.keyboardControl == controlID)) {
+					if (rect.Contains(evt.mousePosition) && IsSelectionButton(evt)) {
 
 						int index = GetSelectionIndex(evt.mousePosition);
 
 						if (CanSelect(index)) {
 
-							DoSelection(index, evt);
+							DoSelection(index, GUIUtility.keyboardControl == 0 || GUIUtility.keyboardControl == controlID || evt.button == 2, evt);
 						}
 						else {
 
@@ -1181,7 +1182,7 @@ namespace Malee.Editor {
 			return evt.button == 0 || evt.button == 2;
 		}
 
-		private void DoSelection(int index, Event evt) {
+		private void DoSelection(int index, bool setKeyboardControl, Event evt) {
 
 			//append selections based on action, this may be a additive (ctrl) or range (shift) selection
 
@@ -1210,7 +1211,11 @@ namespace Malee.Editor {
 				GUIUtility.hotControl = controlID;
 			}
 
-			GUIUtility.keyboardControl = controlID;
+			if (setKeyboardControl) {
+
+				GUIUtility.keyboardControl = controlID;
+			}
+
 			evt.Use();
 		}
 
@@ -1257,10 +1262,8 @@ namespace Malee.Editor {
 
 					return b.selected ? b.startIndex.CompareTo(a.startIndex) : -1;
 				}
-				else {
 
-					return a.startIndex.CompareTo(b.startIndex);
-				}
+				return a.startIndex.CompareTo(b.startIndex);
 			});
 
 			return dragList;
@@ -1278,7 +1281,7 @@ namespace Malee.Editor {
 
 			dragPosition = Mathf.Clamp(position.y, bounds.yMin + minOffset, bounds.yMax - maxOffset);
 
-			if (dragPosition != pressPosition) {
+			if (Mathf.Abs(dragPosition - pressPosition) > 1) {
 
 				dragDirection = (int)Mathf.Sign(dragPosition - pressPosition);
 				return true;
@@ -1301,19 +1304,23 @@ namespace Malee.Editor {
 
 			System.Array.Sort(dragList, (a, b) => a.desiredRect.center.y.CompareTo(b.desiredRect.center.y));
 
-			int start = dragDirection == 1 ? 0 : selection.Length - 1;
-			int end = dragDirection == 1 ? selection.Length : -1;
+			selection.Sort((a, b) => {
+
+				int d1 = GetDragIndexFromSelection(a);
+				int d2 = GetDragIndexFromSelection(b);
+
+				return dragDirection > 0 ? d1.CompareTo(d2) : d2.CompareTo(d1);
+			});
 
 			//swap the selected elements in the List
-			//TODO There's a reorderable bug here. Fix
 
-			for (int i = start; i != end; i += dragDirection) {
+			int s = selection.Length;
 
-				int newIndex = GetDragIndexFromSelection(selection[i]);
+			while (--s > -1) { 
 
-				selection[i] = newIndex;
+				int newIndex = GetDragIndexFromSelection(selection[s]);
 
-				Debug.Log("Moving " + dragList[newIndex].startIndex + " to " + newIndex);
+				selection[s] = newIndex;
 
 				list.MoveArrayElement(dragList[newIndex].startIndex, newIndex);
 			}
@@ -1328,17 +1335,7 @@ namespace Malee.Editor {
 
 		private int GetDragIndexFromSelection(int index) {
 
-			int i, len = dragList.Length;
-
-			for (i = 0; i < len; i++) {
-
-				if (dragList[i].startIndex == index) {
-
-					return i;
-				}
-			}
-
-			return -1;
+			return System.Array.FindIndex(dragList, t => t.startIndex == index);
 		}
 
 		private int GetSelectionIndex(Vector2 position) {
@@ -1360,6 +1357,9 @@ namespace Malee.Editor {
 
 		private bool CanSelect(ListSelection selection) {
 
+			return selection.Length > 0 ? selection.All(s => CanSelect(s)) : false;
+
+			/*
 			int i, len = selection.Length;
 
 			if (len == 0) {
@@ -1376,6 +1376,7 @@ namespace Malee.Editor {
 			}
 
 			return true;
+			*/
 		}
 
 		private bool CanSelect(int index) {
@@ -1385,6 +1386,9 @@ namespace Malee.Editor {
 
 		private bool CanSelect(Vector2 position) {
 
+			return selection.Length > 0 ? selection.Any(s => IsPositionWithinElement(position, s)) : false;
+
+			/*
 			int i, len = selection.Length;
 
 			if (len == 0) {
@@ -1401,10 +1405,14 @@ namespace Malee.Editor {
 			}
 
 			return false;
+			*/
 		}
 
 		private bool IsPositionWithinElement(Vector2 position, int index) {
 
+			return CanSelect(index) ? elementRects[index].Contains(position) : false;
+
+			/*
 			if (CanSelect(index)) {
 
 				Rect elementRect = elementRects[index];
@@ -1415,6 +1423,7 @@ namespace Malee.Editor {
 
 				return false;
 			}
+			*/
 		}
 
 		private bool IsElementExpandable(SerializedProperty element) {
@@ -1612,7 +1621,7 @@ namespace Malee.Editor {
 		// -- SELECTION --
 		//
 
-		class ListSelection {
+		class ListSelection : IEnumerable<int> {
 
 			private List<int> indexes;
 
@@ -1728,6 +1737,14 @@ namespace Malee.Editor {
 				}
 			}
 
+			public void Sort(System.Comparison<int> comparison) {
+
+				if (indexes.Count > 0) {
+
+					indexes.Sort(comparison);
+				}
+			}
+
 			public int[] ToArray() {
 
 				return indexes.ToArray();
@@ -1835,6 +1852,16 @@ namespace Malee.Editor {
 				}
 
 				Append(to);
+			}
+
+			public IEnumerator<int> GetEnumerator() {
+
+				return ((IEnumerable<int>)indexes).GetEnumerator();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator() {
+
+				return ((IEnumerable<int>)indexes).GetEnumerator();
 			}
 		}
 
