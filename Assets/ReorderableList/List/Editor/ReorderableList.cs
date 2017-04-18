@@ -57,6 +57,7 @@ namespace Malee.Editor {
 		public float headerHeight;
 		public float footerHeight;
 		public float slideEasing;
+		public float verticalSpacing;
 		public bool showDefaultBackground;
 		public ElementDisplayType elementDisplayType;
 		public string elementNameProperty;
@@ -130,6 +131,11 @@ namespace Malee.Editor {
 			list.isExpanded = true;
 			label = new GUIContent(list.displayName);
 
+#if UNITY_5_6_OR_NEWER
+			verticalSpacing = EditorGUIUtility.standardVerticalSpacing;
+#else
+			verticalSpacing = 2f;
+#endif
 			headerHeight = 18f;
 			footerHeight = 13f;
 			slideEasing = 0.15f;
@@ -439,7 +445,7 @@ namespace Malee.Editor {
 		private Rect GetElementHeaderRect(SerializedProperty element, Rect elementRect) {
 
 			Rect rect = elementRect;
-			rect.height = EditorGUIUtility.singleLineHeight + 2;
+			rect.height = EditorGUIUtility.singleLineHeight + verticalSpacing;
 
 			return rect;
 		}
@@ -559,7 +565,7 @@ namespace Malee.Editor {
 				//start rect
 
 				Rect elementRect = rect;
-				elementRect.yMin = elementRect.yMax = rect.yMin + 2;
+				elementRect.yMin = elementRect.yMax = rect.yMin + verticalSpacing;
 
 				for (i = 0; i < len; i++) {
 
