@@ -181,10 +181,15 @@ namespace Malee.Editor {
 			set { selection.Select(value); }
 		}
 
+		public bool IsDragging {
+
+			get { return dragging; }
+		}
+
 		//
 		// -- PUBLIC --
 		//
-		
+
 		public float GetHeight() {
 
 			if (HasList) {
