@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Malee;
 
 public class Example : MonoBehaviour {
-	
+
 	public List<ExampleChild> list1;
 
 	[Reorderable]
@@ -15,6 +15,9 @@ public class Example : MonoBehaviour {
 
 	[Reorderable]
 	public StringList list4;
+
+	[Reorderable]
+	public VectorList list5;
 
 	[System.Serializable]
 	public class ExampleChild {
@@ -37,5 +40,9 @@ public class Example : MonoBehaviour {
 
 	[System.Serializable]
 	public class StringList : ReorderableArray<string> {
+	}
+
+	[System.Serializable]
+	public class VectorList : ReorderableArray<Vector3> {
 	}
 }

@@ -428,7 +428,7 @@ namespace Malee.Editor {
 			}
 			else {
 
-				return EditorGUI.GetPropertyHeight(element, GUIContent.none, true) + 5;
+				return EditorGUI.GetPropertyHeight(element, GetElementLabel(element), true) + 5;
 			}
 		}
 
@@ -1392,7 +1392,7 @@ namespace Malee.Editor {
 
 				case ElementDisplayType.Auto:
 
-					return element.hasVisibleChildren && element.propertyType != SerializedPropertyType.ObjectReference;
+					return element.hasVisibleChildren && IsTypeExpandable(element.propertyType);
 
 				case ElementDisplayType.Expandable:
 
@@ -1404,6 +1404,23 @@ namespace Malee.Editor {
 			}
 
 			return false;
+		}
+
+		private bool IsTypeExpandable(SerializedPropertyType type) {
+			
+			switch (type) {
+
+				case SerializedPropertyType.Generic:
+				case SerializedPropertyType.Vector4:
+				case SerializedPropertyType.Quaternion:
+				case SerializedPropertyType.ArraySize:
+
+					return true;
+
+				default:
+
+					return false;
+			}
 		}
 
 		//

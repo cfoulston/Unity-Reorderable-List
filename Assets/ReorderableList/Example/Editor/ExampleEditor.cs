@@ -43,6 +43,7 @@ public class ExampleEditor : Editor {
 
 		//Draw without caching property
 		EditorGUILayout.PropertyField(serializedObject.FindProperty("list4"));
+		EditorGUILayout.PropertyField(serializedObject.FindProperty("list5"));
 
 		serializedObject.ApplyModifiedProperties();
 	}
