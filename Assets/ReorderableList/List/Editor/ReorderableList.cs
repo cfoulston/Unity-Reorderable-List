@@ -1872,25 +1872,41 @@ namespace Malee.Editor {
 			static Internals() {
 
 				dragDropValidation = System.Type.GetType("UnityEditor.EditorGUI, UnityEditor").GetMethod("ValidateObjectFieldAssignment", BindingFlags.NonPublic | BindingFlags.Static);
-				dragDropValidationParams = new object[3];
-
 				appendDragDrop = typeof(SerializedProperty).GetMethod("AppendFoldoutPPtrValue", BindingFlags.NonPublic | BindingFlags.Instance);
-				appendDragDropParams = new object[1];
 			}
 
 			internal static Object ValidateObjectDragAndDrop(Object[] references, SerializedProperty property) {
 
+#if UNITY_2017_1_OR_NEWER
+				dragDropValidationParams = GetParams(ref dragDropValidationParams, 4);
 				dragDropValidationParams[0] = references;
 				dragDropValidationParams[1] = null;
 				dragDropValidationParams[2] = property;
-
+				dragDropValidationParams[3] = 0;
+#else
+				dragDropValidationParams = GetParams(ref dragDropValidationParams, 3);
+				dragDropValidationParams[0] = references;
+				dragDropValidationParams[1] = null;
+				dragDropValidationParams[2] = property;
+#endif
 				return dragDropValidation.Invoke(null, dragDropValidationParams) as Object;
 			}
 
 			internal static void AppendDragAndDropValue(Object obj, SerializedProperty list) {
 
+				appendDragDropParams = GetParams(ref appendDragDropParams, 1);
 				appendDragDropParams[0] = obj;
 				appendDragDrop.Invoke(list, appendDragDropParams);
+			}
+
+			private static object[] GetParams(ref object[] parameters, int count) {
+
+				if (parameters == null) {
+
+					parameters = new object[count];
+				}
+
+				return parameters;
 			}
 		}
 	}
