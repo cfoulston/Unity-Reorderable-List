@@ -86,6 +86,11 @@ namespace Malee {
 			return array.Remove(item);
 		}
 
+		public T[] ToArray() {
+
+			return array.ToArray();
+		}
+
 		public IEnumerator<T> GetEnumerator() {
 
 			return array.GetEnumerator();
@@ -94,16 +99,6 @@ namespace Malee {
 		IEnumerator IEnumerable.GetEnumerator() {
 
 			return array.GetEnumerator();
-		}
-
-		public static implicit operator Array (ReorderableArray<T> reorderableArray) {
-
-			return reorderableArray.array.ToArray();
-		}
-
-		public static implicit operator T[](ReorderableArray<T> reorderableArray) {
-
-			return reorderableArray.array.ToArray();
 		}
 	}
 }
