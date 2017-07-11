@@ -13,4 +13,12 @@ public class GameObjectExample : MonoBehaviour {
 	[System.Serializable]
 	public class GameObjectList : ReorderableArray<GameObject> {
 	}
+
+	private void Update() {
+		
+		if (Input.GetKeyDown(KeyCode.Space)) {
+
+			list.Add(gameObject);
+		}
+	}
 }
