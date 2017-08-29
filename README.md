@@ -2,7 +2,7 @@
 
 An attempt to mimic the ReorderableList within Unity while adding some extended functionality.
 
-![](http://imgur.com/XcDQniZ.png)
+![](https://github.com/LeLocTai/Unity-Reorderable-List/blob/master/Screenshots/screenshot.jpg)
 
 ## Features
 
