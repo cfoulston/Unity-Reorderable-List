@@ -2,7 +2,7 @@
 
 An attempt to mimic the ReorderableList within Unity while adding some extended functionality.
 
-![](https://forum.unity3d.com/proxy.php?image=http%3A%2F%2Fs17.postimg.org%2Fo7c45wm6n%2Flist.jpg&hash=d939c7862c82a8700778de41f655b952)
+![](http://imgur.com/XcDQniZ.png)
 
 ## Features
 
