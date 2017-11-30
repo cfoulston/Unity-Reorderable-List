@@ -7,6 +7,7 @@ namespace Malee {
 		public bool add;
 		public bool remove;
 		public bool draggable;
+		public bool singleLine;
 		public string elementNameProperty;
 		public string elementNameOverride;
 		public string elementIconPath;

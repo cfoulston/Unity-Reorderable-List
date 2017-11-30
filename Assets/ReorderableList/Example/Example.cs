@@ -43,6 +43,6 @@ public class Example : MonoBehaviour {
 	}
 
 	[System.Serializable]
-	public class VectorList : ReorderableArray<Vector3> {
+	public class VectorList : ReorderableArray<Vector4> {
 	}
 }

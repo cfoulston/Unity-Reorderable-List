@@ -9,6 +9,10 @@ namespace Malee.Editor {
 
 	public class ReorderableList {
 
+		private const float ELEMENT_EDGE_TOP = 1;
+		private const float ELEMENT_EDGE_BOT = 3;
+		private const float ELEMENT_HEIGHT_OFFSET = ELEMENT_EDGE_TOP + ELEMENT_EDGE_BOT;
+
 		private static int selectionHash = "ReorderableListSelection".GetHashCode();
 		private static int dragAndDropHash = "ReorderableListDragAndDrop".GetHashCode();
 
@@ -73,6 +77,11 @@ namespace Malee.Editor {
 		private ListSelection selection;
 		private SlideGroup slideGroup;
 		private int pressIndex;
+
+		private float elementSpacing {
+
+			get { return Mathf.Max(0, verticalSpacing - 2); }
+		}
 
 		private bool dragging;
 		private float pressPosition;
@@ -411,24 +420,25 @@ namespace Malee.Editor {
 			}
 
 			float totalHeight = 0;
+			float spacing = elementSpacing;
 
 			for (i = 0; i < len; i++) {
 
-				totalHeight += GetElementHeight(list.GetArrayElementAtIndex(i));
+				totalHeight += GetElementHeight(list.GetArrayElementAtIndex(i)) + spacing;
 			}
 
-			return totalHeight + 7;
+			return totalHeight + 7 - spacing;
 		}
 
 		private float GetElementHeight(SerializedProperty element) {
 
 			if (getElementHeightCallback != null) {
 
-				return getElementHeightCallback(element) + 5;
+				return getElementHeightCallback(element) + ELEMENT_HEIGHT_OFFSET;
 			}
 			else {
 
-				return EditorGUI.GetPropertyHeight(element, GetElementLabel(element), true) + 5;
+				return EditorGUI.GetPropertyHeight(element, GetElementLabel(element), IsElementExpandable(element)) + ELEMENT_HEIGHT_OFFSET;
 			}
 		}
 
@@ -447,6 +457,7 @@ namespace Malee.Editor {
 			}
 		}
 
+		/*
 		private Rect GetElementHeaderRect(SerializedProperty element, Rect elementRect) {
 
 			Rect rect = elementRect;
@@ -454,6 +465,7 @@ namespace Malee.Editor {
 
 			return rect;
 		}
+		*/
 
 		private Rect GetElementRenderRect(SerializedProperty element, Rect elementRect) {
 
@@ -462,8 +474,8 @@ namespace Malee.Editor {
 			Rect rect = elementRect;
 			rect.xMin += IsElementExpandable(element) ? offset + 10 : offset;
 			rect.xMax -= 5;
-			rect.yMin += 1;
-			rect.yMax -= 1;
+			rect.yMin += ELEMENT_EDGE_TOP;
+			rect.yMax -= ELEMENT_EDGE_BOT;
 
 			return rect;
 		}
@@ -570,7 +582,9 @@ namespace Malee.Editor {
 				//start rect
 
 				Rect elementRect = rect;
-				elementRect.yMin = elementRect.yMax = rect.yMin + verticalSpacing;
+				elementRect.yMin = elementRect.yMax = rect.yMin + 2;
+
+				float spacing = elementSpacing;
 
 				for (i = 0; i < len; i++) {
 
@@ -581,6 +595,8 @@ namespace Malee.Editor {
 					elementRect.y = elementRect.yMax;
 					elementRect.height = GetElementHeight(element);
 					elementRects[i] = elementRect;
+
+					elementRect.yMax += spacing;
 				}
 			}
 		}
@@ -1030,6 +1046,23 @@ namespace Malee.Editor {
 
 		private void HandlePreSelection(Rect rect, Event evt) {
 
+			if (evt.type == EventType.MouseDrag && draggable && GUIUtility.hotControl == controlID) {
+
+				if (selection.Length > 0 && UpdateDragPosition(evt.mousePosition, rect, dragList)) {
+
+					GUIUtility.keyboardControl = controlID;
+					dragging = true;
+				}
+
+				evt.Use();
+			}
+
+			/* TODO This is buggy. The reason for this is to allow selection and dragging of an element using the header, or top row (if any)
+			 * The main issue here is determining whether the element has an "expandable" drop down arrow, which if it does, will capture the mouse event *without* the code below
+			 * Because of property drawers and certain property types, it's impossible to know this automatically (without dirty reflection)
+			 * So if the below code is active and we determine that the property is expandable but isn't actually. Then we'll accidently capture the mouse focus and prevent anything else from receiving it :(
+			 * So for now, in order to drag or select a row, the user must select empty space on the row. Not a huge deal, and doesn't break functionality.
+			 * What needs to happen is the drag event needs to occur independent of the event type. But that's messy too, as some controls have horizontal drag sliders :(
 			if (evt.type == EventType.MouseDown) {
 
 				//check if we contain the mouse press
@@ -1063,16 +1096,7 @@ namespace Malee.Editor {
 					}
 				}
 			}
-			else if (evt.type == EventType.MouseDrag && draggable && GUIUtility.hotControl == controlID) {
-
-				if (selection.Length > 0 && UpdateDragPosition(evt.mousePosition, rect, dragList)) {
-
-					GUIUtility.keyboardControl = controlID;
-					dragging = true;
-				}
-
-				evt.Use();
-			}
+			*/
 		}
 
 		private void HandlePostSelection(Rect rect, Event evt) {
@@ -1394,13 +1418,8 @@ namespace Malee.Editor {
 
 					return element.hasVisibleChildren && IsTypeExpandable(element.propertyType);
 
-				case ElementDisplayType.Expandable:
-
-					return true;
-
-				case ElementDisplayType.SingleLine:
-
-					return false;
+				case ElementDisplayType.Expandable: return true;
+				case ElementDisplayType.SingleLine: return false;
 			}
 
 			return false;

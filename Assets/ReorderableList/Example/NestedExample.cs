@@ -11,7 +11,7 @@ public class NestedExample : MonoBehaviour {
 	[System.Serializable]
 	public class ExampleChild {
 
-		[Reorderable]
+		[Reorderable(singleLine = true)]
 		public NestedChildList nested;
 	}
 
@@ -19,13 +19,20 @@ public class NestedExample : MonoBehaviour {
 	public class NestedChild {
 
 		public float myValue;
-	}	
+	}
+
+	[System.Serializable]
+	public class NestedChildCustomDrawer {
+
+		public bool myBool;
+		public GameObject myGameObject;
+	}
 
 	[System.Serializable]
 	public class ExampleChildList : ReorderableArray<ExampleChild> {
 	}
 
 	[System.Serializable]
-	public class NestedChildList : ReorderableArray<NestedChild> {
+	public class NestedChildList : ReorderableArray<NestedChildCustomDrawer> {
 	}
 }
