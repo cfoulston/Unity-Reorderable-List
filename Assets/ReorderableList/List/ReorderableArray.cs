@@ -46,6 +46,12 @@ namespace Malee {
 			return new List<T>(array);
 		}
 
+		public void CopyFrom(IEnumerable<T> value) {
+
+			array.Clear();
+			array.AddRange(value);
+		}
+
 		public bool Contains(T value) {
 
 			return array.Contains(value);
