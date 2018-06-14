@@ -26,6 +26,9 @@ public class Example : MonoBehaviour {
 		public float value;
 		public ExampleEnum myEnum;
 		public LayerMask layerMask;
+		public long longValue;
+		public char charValue;
+		public byte byteValue;
 
 		public enum ExampleEnum {
 			EnumValue1,

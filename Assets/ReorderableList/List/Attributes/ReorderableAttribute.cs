@@ -8,6 +8,8 @@ namespace Malee {
 		public bool remove;
 		public bool draggable;
 		public bool singleLine;
+		public bool paginate;
+		public int pageSize;
 		public string elementNameProperty;
 		public string elementNameOverride;
 		public string elementIconPath;

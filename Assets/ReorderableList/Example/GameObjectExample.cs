@@ -7,7 +7,7 @@ public class GameObjectExample : MonoBehaviour {
 
 	//There's a bug with Unity and rendering when an Object has no CustomEditor defined. As in this example
 	//The list will reorder correctly, but depth sorting and animation will not update :(
-	[Reorderable]
+	[Reorderable(paginate = true, pageSize = 2)]
 	public GameObjectList list;
 
 	[System.Serializable]
