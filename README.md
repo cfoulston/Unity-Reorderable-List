@@ -15,14 +15,12 @@ An attempt to mimic the ReorderableList within Unity while adding some extended 
 * Event delegates and custom styling
 * Pagination
 * Sorting (sort based on field, ascending and descending)
-___
 
 ## Usage
 
 There are two ways to use the ReorderableList
 1. Create a custom Editor for your class and create a ReorderableList pointing to your serializedProperty
 2. Create custom list class which extends from ReorderableArray<T>, assign [Reorderable] attribute above property (not class).
-___
 
 ## Pagination
 
