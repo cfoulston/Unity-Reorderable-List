@@ -9,6 +9,7 @@ namespace Malee {
 		public bool draggable;
 		public bool singleLine;
 		public bool paginate;
+		public bool sortable;
 		public int pageSize;
 		public string elementNameProperty;
 		public string elementNameOverride;
@@ -39,6 +40,7 @@ namespace Malee {
 			this.add = add;
 			this.remove = remove;
 			this.draggable = draggable;
+			this.sortable = true;
 			this.elementNameProperty = elementNameProperty;
 			this.elementNameOverride = elementNameOverride;
 			this.elementIconPath = elementIconPath;

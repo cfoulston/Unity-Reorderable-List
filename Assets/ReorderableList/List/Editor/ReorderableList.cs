@@ -57,6 +57,7 @@ namespace Malee.Editor {
 		public bool canAdd;
 		public bool canRemove;	
 		public bool draggable;
+		public bool sortable;
 		public bool expandable;
 		public bool multipleSelection;
 		public GUIContent label;
@@ -632,23 +633,24 @@ namespace Malee.Editor {
 			}
 
 			//draw sorting options
+			if (sortable) {
+				Rect sortRect1 = rect;
+				sortRect1.xMin = rect.xMax - 25;
+				sortRect1.xMax = rect.xMax;
 
-			Rect sortRect1 = rect;
-			sortRect1.xMin = rect.xMax - 25;
-			sortRect1.xMax = rect.xMax;
+				Rect sortRect2 = rect;
+				sortRect2.xMin = sortRect1.xMin - 20;
+				sortRect2.xMax = sortRect1.xMin;
 
-			Rect sortRect2 = rect;
-			sortRect2.xMin = sortRect1.xMin - 20;
-			sortRect2.xMax = sortRect1.xMin;
+				if (EditorGUI.DropdownButton(sortRect1, Style.sortAscending, FocusType.Passive, Style.preButton)) {
 
-			if (EditorGUI.DropdownButton(sortRect1, Style.sortAscending, FocusType.Passive, Style.preButton)) {
+					SortElements(sortRect1, false);
+				}
 
-				SortElements(sortRect1, false);
-			}
+				if (EditorGUI.DropdownButton(sortRect2, Style.sortDescending, FocusType.Passive, Style.preButton)) {
 
-			if (EditorGUI.DropdownButton(sortRect2, Style.sortDescending, FocusType.Passive, Style.preButton)) {
-
-				SortElements(sortRect2, true);
+					SortElements(sortRect2, true);
+				}
 			}
 		}
 
