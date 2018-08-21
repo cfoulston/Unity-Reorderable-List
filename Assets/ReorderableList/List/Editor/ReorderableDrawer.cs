@@ -81,6 +81,7 @@ namespace Malee.Editor {
 						list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, displayType, attrib.elementNameProperty, attrib.elementNameOverride, icon);
 						list.paginate = attrib.paginate;
 						list.pageSize = attrib.pageSize;
+						list.sortable = attrib.sortable;
 					}
 					else {
 
