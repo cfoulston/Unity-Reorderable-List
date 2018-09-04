@@ -55,7 +55,7 @@ namespace Malee.Editor {
 		public event ActionDelegate onChangedCallback;
 
 		public bool canAdd;
-		public bool canRemove;	
+		public bool canRemove;
 		public bool draggable;
 		public bool sortable;
 		public bool expandable;
@@ -69,6 +69,7 @@ namespace Malee.Editor {
 		public ElementDisplayType elementDisplayType;
 		public string elementNameProperty;
 		public string elementNameOverride;
+		public bool elementLabels;
 		public Texture elementIcon;
 
 		public bool paginate {
@@ -112,8 +113,8 @@ namespace Malee.Editor {
 		private DragList dragList;
 		private ListSelection beforeDragSelection;
 		private Pagination pagination;
-		
-		private int dragDropControlID = -1;		
+
+		private int dragDropControlID = -1;
 
 		public ReorderableList(SerializedProperty list)
 			: this(list, true, true, true) {
@@ -123,7 +124,7 @@ namespace Malee.Editor {
 			: this(list, canAdd, canRemove, draggable, ElementDisplayType.Auto, null, null, null) {
 		}
 
-		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable, ElementDisplayType elementDisplayType, string elementNameProperty, Texture elementIcon) 
+		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable, ElementDisplayType elementDisplayType, string elementNameProperty, Texture elementIcon)
 			: this(list, canAdd, canRemove, draggable, elementDisplayType, elementNameProperty, null, elementIcon) {
 		}
 
@@ -174,6 +175,7 @@ namespace Malee.Editor {
 			footerHeight = 13f;
 			slideEasing = 0.15f;
 			expandable = true;
+			elementLabels = true;
 			showDefaultBackground = true;
 			multipleSelection = true;
 			pagination = new Pagination();
@@ -283,7 +285,7 @@ namespace Malee.Editor {
 			EditorGUI.indentLevel = 0;
 
 			Rect headerRect = rect;
-			headerRect.height = headerHeight;			
+			headerRect.height = headerHeight;
 
 			if (!HasList) {
 
@@ -294,7 +296,7 @@ namespace Malee.Editor {
 				controlID = GUIUtility.GetControlID(selectionHash, FocusType.Keyboard, rect);
 				dragDropControlID = GUIUtility.GetControlID(dragAndDropHash, FocusType.Passive, rect);
 
-				DrawHeader(headerRect, label);				
+				DrawHeader(headerRect, label);
 
 				if (list.isExpanded) {
 
@@ -310,7 +312,7 @@ namespace Malee.Editor {
 
 					Rect elementBackgroundRect = rect;
 					elementBackgroundRect.yMin = headerRect.yMax;
-					elementBackgroundRect.yMax = rect.yMax - footerHeight;		
+					elementBackgroundRect.yMax = rect.yMax - footerHeight;
 
 					Event evt = Event.current;
 
@@ -382,12 +384,8 @@ namespace Malee.Editor {
 
 				list.arraySize++;
 				selection.Select(list.arraySize - 1);
-				
-				if (doPagination) {
 
-					pagination.page = pagination.GetPageForIndex(list.arraySize - 1);
-				}
-
+				SetPageByIndex(list.arraySize - 1);
 				DispatchChange();
 
 				return list.GetArrayElementAtIndex(selection.Last);
@@ -396,7 +394,7 @@ namespace Malee.Editor {
 
 				throw new InvalidListException();
 			}
-		}		
+		}
 
 		public void Remove(int[] selection) {
 
@@ -483,6 +481,32 @@ namespace Malee.Editor {
 			}
 		}
 
+		public void SetPage(int page) {
+
+			if (doPagination) {
+
+				pagination.page = page;
+			}
+		}
+
+		public void SetPageByIndex(int index) {
+
+			if (doPagination) {
+
+				pagination.page = pagination.GetPageForIndex(index);
+			}
+		}
+
+		public int GetPage(int index) {
+
+			return doPagination ? pagination.page : 0;
+		}
+
+		public int GetPageByIndex(int index) {
+
+			return doPagination ? pagination.GetPageForIndex(index) : 0;
+		}
+
 		//
 		// -- PRIVATE --
 		//
@@ -524,7 +548,7 @@ namespace Malee.Editor {
 			}
 			else {
 
-				return EditorGUI.GetPropertyHeight(element, GetElementLabel(element), IsElementExpandable(element)) + ELEMENT_HEIGHT_OFFSET;
+				return EditorGUI.GetPropertyHeight(element, GetElementLabel(element, elementLabels), IsElementExpandable(element)) + ELEMENT_HEIGHT_OFFSET;
 			}
 		}
 
@@ -572,7 +596,7 @@ namespace Malee.Editor {
 
 				Style.headerBackground.Draw(rect, false, false, false, false);
 			}
-			
+
 			HandleDragAndDrop(rect, Event.current);
 
 			bool multiline = elementDisplayType != ElementDisplayType.SingleLine;
@@ -589,7 +613,7 @@ namespace Malee.Editor {
 
 				drawHeaderCallback(titleRect, label);
 			}
-			else if (expandable) { 
+			else if (expandable) {
 
 				titleRect.xMin += 10;
 
@@ -633,7 +657,9 @@ namespace Malee.Editor {
 			}
 
 			//draw sorting options
+
 			if (sortable) {
+
 				Rect sortRect1 = rect;
 				sortRect1.xMin = rect.xMax - 25;
 				sortRect1.xMax = rect.xMax;
@@ -720,7 +746,7 @@ namespace Malee.Editor {
 				ListSort.SortOnType(list, total, descending, prop.propertyType);
 
 				ApplyReorder();
-			}			
+			}
 		}
 
 		private void DrawEmpty(Rect rect, string label, GUIStyle backgroundStyle, GUIStyle labelStyle) {
@@ -733,7 +759,7 @@ namespace Malee.Editor {
 			EditorGUI.LabelField(rect, label, labelStyle);
 		}
 
-		private void UpdateElementRects(Rect rect, Event evt) {			
+		private void UpdateElementRects(Rect rect, Event evt) {
 
 			//resize array if elements changed
 
@@ -780,7 +806,7 @@ namespace Malee.Editor {
 
 				Style.boxBackground.Draw(rect, false, false, false, false);
 			}
-			
+
 			//if not dragging, draw elements as usual
 
 			if (!dragging) {
@@ -789,7 +815,7 @@ namespace Malee.Editor {
 
 				pagination.GetVisibleRange(Length, out start, out end);
 
-				for (int i = start; i < end; i++) { 
+				for (int i = start; i < end; i++) {
 
 					bool selected = selection.Contains(i);
 
@@ -821,7 +847,7 @@ namespace Malee.Editor {
 
 				while (--i > -1) {
 
-					DragElement element = dragList[i];					
+					DragElement element = dragList[i];
 
 					//draw dragging elements last as the loop is backwards
 
@@ -841,7 +867,7 @@ namespace Malee.Editor {
 					int start = dragDirection > 0 ? sLen - 1 : 0;
 					int end = dragDirection > 0 ? -1 : sLen;
 
-					for (s = start; s != end; s -= dragDirection) { 
+					for (s = start; s != end; s -= dragDirection) {
 
 						DragElement selected = dragList[s];
 
@@ -876,13 +902,13 @@ namespace Malee.Editor {
 
 				Style.elementBackground.Draw(rect, false, selected, selected, focused);
 			}
-			
+
 			if (evt.type == EventType.Repaint && draggable) {
 
 				Style.draggingHandle.Draw(new Rect(rect.x + 5, rect.y + 6, 10, rect.height - (rect.height - 6)), false, false, false, false);
-			}			
+			}
 
-			GUIContent label = GetElementLabel(element);
+			GUIContent label = GetElementLabel(element, elementLabels);
 
 			Rect renderRect = GetElementRenderRect(element, rect);
 
@@ -912,9 +938,13 @@ namespace Malee.Editor {
 			}
 		}
 
-		private GUIContent GetElementLabel(SerializedProperty element) {
+		private GUIContent GetElementLabel(SerializedProperty element, bool allowElementLabel) {
 
-			if (getElementLabelCallback != null) {
+			if (!allowElementLabel) {
+
+				return GUIContent.none;
+			}
+			else if (getElementLabelCallback != null) {
 
 				return getElementLabelCallback(element);
 			}
@@ -1211,7 +1241,7 @@ namespace Malee.Editor {
 
 			if (element.isInstantiatedPrefab) {
 
-				menu.AddItem(new GUIContent("Revert " + GetElementLabel(element).text + " to Prefab"), false, selection.RevertValues, list);
+				menu.AddItem(new GUIContent("Revert " + GetElementLabel(element, true).text + " to Prefab"), false, selection.RevertValues, list);
 				menu.AddSeparator(string.Empty);
 			}
 
@@ -1343,14 +1373,14 @@ namespace Malee.Editor {
 						bool acceptDrag = false;
 
 						foreach (Object object1 in objectReferences) {
-							
+
 							references[0] = object1;
 							Object object2 = ValidateObjectDragAndDrop(references);
-							
+
 							if (object2 != null) {
-								
+
 								DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-								
+
 								if (evt.type == EventType.DragPerform) {
 
 									if (onAppendDragDropCallback != null) {
@@ -1366,14 +1396,14 @@ namespace Malee.Editor {
 									DragAndDrop.activeControlID = 0;
 								}
 								else {
-									
+
 									DragAndDrop.activeControlID = dragDropControlID;
 								}
 							}
 						}
 
 						if (acceptDrag) {
-							
+
 							GUI.changed = true;
 							DragAndDrop.AcceptDrag();
 						}
@@ -1387,7 +1417,7 @@ namespace Malee.Editor {
 
 						HandleUtility.Repaint();
 					}
-					
+
 					break;
 			}
 		}
@@ -1685,7 +1715,7 @@ namespace Malee.Editor {
 
 			int s = selection.Length;
 
-			while (--s > -1) { 
+			while (--s > -1) {
 
 				int newIndex = dragList.GetIndexFromSelection(selection[s]);
 				int listIndex = newIndex + offset;
@@ -1772,7 +1802,7 @@ namespace Malee.Editor {
 		}
 
 		private bool IsTypeExpandable(SerializedPropertyType type) {
-			
+
 			switch (type) {
 
 				case SerializedPropertyType.Generic:
@@ -1795,7 +1825,7 @@ namespace Malee.Editor {
 		static class Style {
 
 			internal const string PAGE_INFO_FORMAT = "{0} / {1}";
-			
+
 			internal static GUIContent iconToolbarPlus;
 			internal static GUIContent iconToolbarPlusMore;
 			internal static GUIContent iconToolbarMinus;
@@ -2059,9 +2089,9 @@ namespace Malee.Editor {
 			}
 
 			public Rect GetRect(int id, Rect r, float easing) {
-				
+
 				if (Event.current.type != EventType.Repaint) {
-					
+
 					return r;
 				}
 
@@ -2214,7 +2244,7 @@ namespace Malee.Editor {
 				set {
 
 					int oldIndex = indexes[index];
-					
+
 					indexes[index] = value;
 
 					if (oldIndex == firstSelected) {
@@ -2250,14 +2280,14 @@ namespace Malee.Editor {
 
 				firstSelected = index;
 			}
-			
+
 			public void Remove(int index) {
 
 				if (indexes.Contains(index)) {
 
 					indexes.Remove(index);
 				}
-			}			
+			}
 
 			public void AppendWithAction(int index, Event evt) {
 
@@ -2360,10 +2390,10 @@ namespace Malee.Editor {
 
 					if (property.isInstantiatedPrefab) {
 
-						property.prefabOverride = false;						
+						property.prefabOverride = false;
 					}
 				}
-				
+
 				list.serializedObject.ApplyModifiedProperties();
 				list.serializedObject.Update();
 
@@ -2375,15 +2405,15 @@ namespace Malee.Editor {
 				int offset = 0;
 
 				for (int i = 0; i < Length; i++) {
-					
+
 					this[i] += offset;
 
-					list.GetArrayElementAtIndex(this[i]).DuplicateCommand();				
+					list.GetArrayElementAtIndex(this[i]).DuplicateCommand();
 					list.serializedObject.ApplyModifiedProperties();
 					list.serializedObject.Update();
-					
+
 					offset++;
-				}				
+				}
 
 				HandleUtility.Repaint();
 			}
@@ -2391,7 +2421,7 @@ namespace Malee.Editor {
 			internal void Delete(SerializedProperty list) {
 
 				Sort();
-				
+
 				int i = Length;
 
 				while (--i > -1) {
@@ -2629,4 +2659,4 @@ namespace Malee.Editor {
 		}
 	}
 }
- 
+
