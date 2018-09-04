@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using Malee.Editor;
 using System;
 
@@ -50,7 +50,7 @@ public class NameOverrideEditor : Editor {
 
 	private void UpdateElementNames(SerializedProperty listProperty, SerializedProperty nameOverride) {
 
-		ReorderableList list = ReorderableDrawer.GetList(listProperty);
+		ReorderableList list = ReorderableDrawer.GetList(listProperty, ReorderableDrawer.ARRAY_PROPERTY_NAME);
 
 		if (list != null) {
 
