@@ -2,7 +2,7 @@
 
 An attempt to mimic the ReorderableList within Unity while adding some extended functionality.
 
-![](https://raw.githubusercontent.com/cfoulston/Unity-Reorderable-List/master/Screenshots/screenshot.jpg)
+![screenshot](https://user-images.githubusercontent.com/6723783/45054643-70b46200-b042-11e8-874c-0d93a46e05a5.jpg)
 
 ## Features
 
@@ -36,7 +36,7 @@ Pagination can be enabled in two ways:
 
 When enabled, the ReorderableList GUI will display a small section below the header to facilitate navigating the pages
 
-![](https://raw.githubusercontent.com/cfoulston/Unity-Reorderable-List/master/Screenshots/pagination.jpg)
+![pagination](https://user-images.githubusercontent.com/6723783/45054642-701bcb80-b042-11e8-84e4-0886d23c83c9.jpg)
 
 #### NOTE 
 *Elements can be moved between pages by right-clicking and selecting "Move Array Element"*
