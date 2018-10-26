@@ -25,9 +25,9 @@ namespace Malee {
 			get { return array[index]; }
 			set { array[index] = value; }
 		}
-		
+
 		public int Length {
-			
+
 			get { return array.Count; }
 		}
 

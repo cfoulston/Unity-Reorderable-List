@@ -11,12 +11,17 @@ namespace Malee.Editor {
 
 		private static Dictionary<int, ReorderableList> lists = new Dictionary<int, ReorderableList>();
 
+		public override bool CanCacheInspectorGUI(SerializedProperty property) {
+
+			return false;
+		}
+
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label) {
 
 			ReorderableList list = GetList(property, attribute as ReorderableAttribute, ARRAY_PROPERTY_NAME);
 
 			return list != null ? list.GetHeight() : EditorGUIUtility.singleLineHeight;
-		}		
+		}
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 
@@ -83,7 +88,7 @@ namespace Malee.Editor {
 						list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, displayType, attrib.elementNameProperty, attrib.elementNameOverride, icon);
 						list.paginate = attrib.paginate;
 						list.pageSize = attrib.pageSize;
-						list.sortable = attrib.sortable;						
+						list.sortable = attrib.sortable;
 					}
 					else {
 

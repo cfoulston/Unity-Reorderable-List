@@ -40,10 +40,11 @@ namespace Malee {
 			this.add = add;
 			this.remove = remove;
 			this.draggable = draggable;
-			this.sortable = true;
 			this.elementNameProperty = elementNameProperty;
 			this.elementNameOverride = elementNameOverride;
 			this.elementIconPath = elementIconPath;
+
+			sortable = true;
 		}
 	}
 }

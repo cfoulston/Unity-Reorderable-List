@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,6 +15,9 @@ namespace Malee.Editor {
 
 		private static int selectionHash = "ReorderableListSelection".GetHashCode();
 		private static int dragAndDropHash = "ReorderableListDragAndDrop".GetHashCode();
+
+		private const string EMPTY_LABEL = "List is Empty";
+		private const string ARRAY_ERROR = "{0} is not an Array!";
 
 		public enum ElementDisplayType {
 			Auto,
@@ -289,7 +292,7 @@ namespace Malee.Editor {
 
 			if (!HasList) {
 
-				DrawEmpty(headerRect, label.text + " is not an Array!", GUIStyle.none, EditorStyles.helpBox);
+				DrawEmpty(headerRect, string.Format(ARRAY_ERROR, label.text), GUIStyle.none, EditorStyles.helpBox);
 			}
 			else {
 
@@ -350,7 +353,7 @@ namespace Malee.Editor {
 					}
 					else {
 
-						DrawEmpty(elementBackgroundRect, "List is Empty", Style.boxBackground, Style.verticalLabel);
+						DrawEmpty(elementBackgroundRect, EMPTY_LABEL, Style.boxBackground, Style.verticalLabel);
 					}
 
 					Rect footerRect = rect;
@@ -979,9 +982,8 @@ namespace Malee.Editor {
 				if (path.EndsWith(arrayEndDelimeter)) {
 
 					int startIndex = path.LastIndexOf(arrayStartDelimeter) + 1;
-					const string space = " ";
 
-					return string.Format("{0} {1}", nameOverride, space, path.Substring(startIndex, path.Length - startIndex - 1));
+					return string.Format("{0} {1}", nameOverride, path.Substring(startIndex, path.Length - startIndex - 1));
 				}
 
 				return nameOverride;
@@ -1888,8 +1890,8 @@ namespace Malee.Editor {
 				elementBackground = new GUIStyle("RL Element");
 				elementBackground.border = new RectOffset(2, 3, 2, 3);
 				verticalLabel = new GUIStyle(EditorStyles.label);
-				verticalLabel.alignment = TextAnchor.MiddleLeft;
-				verticalLabel.contentOffset = new Vector2(10, -3);
+				verticalLabel.alignment = TextAnchor.UpperLeft;
+				verticalLabel.contentOffset = new Vector2(10, 3);
 				boxBackground = new GUIStyle("RL Background");
 				boxBackground.border = new RectOffset(6, 3, 3, 6);
 				preButton = new GUIStyle("RL FooterButton");
