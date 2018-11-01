@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 namespace Malee {
 
@@ -14,6 +15,8 @@ namespace Malee {
 		public string elementNameProperty;
 		public string elementNameOverride;
 		public string elementIconPath;
+		public Type surrogateType;
+		public string surrogateProperty;
 
 		public ReorderableAttribute()
 			: this(null) {
@@ -31,7 +34,7 @@ namespace Malee {
 			: this(true, true, true, elementNameProperty, elementNameOverride, elementIconPath) {
 		}
 
-		public ReorderableAttribute(bool add, bool remove, bool draggable, string elementNameProperty = null, string elementIconPath = null) 
+		public ReorderableAttribute(bool add, bool remove, bool draggable, string elementNameProperty = null, string elementIconPath = null)
 			: this(add, remove, draggable, elementNameProperty, null, elementIconPath) {
 		}
 

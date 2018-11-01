@@ -5,6 +5,7 @@ using Malee;
 
 public class RecursionTest : MonoBehaviour {
 
+	/* Don't do this!
 	[Reorderable]
 	public Tables tables = new Tables();
 
@@ -20,4 +21,5 @@ public class RecursionTest : MonoBehaviour {
 	[System.Serializable]
 	public class Tables : ReorderableArray<Table> {
 	}
+	*/
 }

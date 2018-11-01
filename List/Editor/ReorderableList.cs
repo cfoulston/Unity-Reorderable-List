@@ -37,6 +37,7 @@ namespace Malee.Editor {
 		public delegate float GetElementsHeightDelegate(ReorderableList list);
 		public delegate string GetElementNameDelegate(SerializedProperty element);
 		public delegate GUIContent GetElementLabelDelegate(SerializedProperty element);
+		public delegate void SurrogateCallback(SerializedProperty element, Object objectReference, ReorderableList list);
 
 		public event DrawHeaderDelegate drawHeaderCallback;
 		public event DrawFooterDelegate drawFooterCallback;
@@ -74,6 +75,7 @@ namespace Malee.Editor {
 		public string elementNameOverride;
 		public bool elementLabels;
 		public Texture elementIcon;
+		public Surrogate surrogate;
 
 		public bool paginate {
 
@@ -1385,14 +1387,7 @@ namespace Malee.Editor {
 
 								if (evt.type == EventType.DragPerform) {
 
-									if (onAppendDragDropCallback != null) {
-
-										onAppendDragDropCallback(object2, this);
-									}
-									else {
-
-										AppendDragAndDropValue(object2);
-									}
+									AppendDragAndDropValue(object2);
 
 									acceptDrag = true;
 									DragAndDrop.activeControlID = 0;
@@ -1430,13 +1425,35 @@ namespace Malee.Editor {
 
 				return onValidateDragAndDropCallback(references, this);
 			}
+			else if (surrogate.HasType) {
 
-			return Internals.ValidateObjectDragAndDrop(references, list);
+				//if we have a surrogate type, then validate using the surrogate type rather than the list
+
+				return Internals.ValidateObjectDragAndDrop(references, null, surrogate.type, surrogate.exactType);
+			}
+
+			return Internals.ValidateObjectDragAndDrop(references, list, null, false);
 		}
 
 		private void AppendDragAndDropValue(Object obj) {
 
-			Internals.AppendDragAndDropValue(obj, list);
+			if (onAppendDragDropCallback != null) {
+
+				onAppendDragDropCallback(obj, this);
+			}
+			else {
+
+				//check if we have a surrogate type. If so use that for appending
+
+				if (surrogate.HasType) {
+
+					surrogate.Invoke(AddItem(), obj, this);
+				}
+				else {
+
+					Internals.AppendDragAndDropValue(obj, list);
+				}
+			}
 
 			DispatchChange();
 		}
@@ -2593,6 +2610,45 @@ namespace Malee.Editor {
 		}
 
 		//
+		// -- SURROGATE --
+		//
+
+		public struct Surrogate {
+
+			public System.Type type;
+			public bool exactType;
+			public SurrogateCallback callback;
+
+			internal bool enabled;
+
+			public bool HasType {
+
+				get { return enabled && type != null; }
+			}
+
+			public Surrogate(System.Type type)
+				: this(type, null) {
+			}
+
+			public Surrogate(System.Type type, SurrogateCallback callback) {
+
+				this.type = type;
+				this.callback = callback;
+
+				enabled = true;
+				exactType = false;
+			}
+
+			public void Invoke(SerializedProperty element, Object objectReference, ReorderableList list) {
+
+				if (element != null && callback != null) {
+
+					callback.Invoke(element, objectReference, list);
+				}
+			}
+		}
+
+		//
 		// -- EXCEPTIONS --
 		//
 
@@ -2625,18 +2681,18 @@ namespace Malee.Editor {
 				appendDragDrop = typeof(SerializedProperty).GetMethod("AppendFoldoutPPtrValue", BindingFlags.NonPublic | BindingFlags.Instance);
 			}
 
-			internal static Object ValidateObjectDragAndDrop(Object[] references, SerializedProperty property) {
+			internal static Object ValidateObjectDragAndDrop(Object[] references, SerializedProperty property, System.Type type, bool exactType) {
 
 #if UNITY_2017_1_OR_NEWER
 				dragDropValidationParams = GetParams(ref dragDropValidationParams, 4);
 				dragDropValidationParams[0] = references;
-				dragDropValidationParams[1] = null;
+				dragDropValidationParams[1] = type;
 				dragDropValidationParams[2] = property;
-				dragDropValidationParams[3] = 0;
+				dragDropValidationParams[3] = exactType ? 1 : 0;
 #else
 				dragDropValidationParams = GetParams(ref dragDropValidationParams, 3);
 				dragDropValidationParams[0] = references;
-				dragDropValidationParams[1] = null;
+				dragDropValidationParams[1] = type;
 				dragDropValidationParams[2] = property;
 #endif
 				return dragDropValidation.Invoke(null, dragDropValidationParams) as Object;

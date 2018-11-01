@@ -89,6 +89,15 @@ namespace Malee.Editor {
 						list.paginate = attrib.paginate;
 						list.pageSize = attrib.pageSize;
 						list.sortable = attrib.sortable;
+
+						//handle surrogate if any
+
+						if (attrib.surrogateType != null) {
+
+							SurrogateCallback callback = new SurrogateCallback(attrib.surrogateProperty);
+
+							list.surrogate = new ReorderableList.Surrogate(attrib.surrogateType, callback.SetReference);
+						}
 					}
 					else {
 
@@ -104,6 +113,26 @@ namespace Malee.Editor {
 			}
 
 			return list;
+		}
+
+		private struct SurrogateCallback {
+
+			private string property;
+
+			internal SurrogateCallback(string property) {
+
+				this.property = property;
+			}
+
+			internal void SetReference(SerializedProperty element, Object objectReference, ReorderableList list) {
+
+				SerializedProperty prop = !string.IsNullOrEmpty(property) ? element.FindPropertyRelative(property) : null;
+
+				if (prop != null && prop.propertyType == SerializedPropertyType.ObjectReference) {
+
+					prop.objectReferenceValue = objectReference;
+				}
+			}
 		}
 	}
 }

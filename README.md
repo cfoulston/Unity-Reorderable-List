@@ -15,6 +15,7 @@ An attempt to mimic the ReorderableList within Unity while adding some extended 
 * Event delegates and custom styling
 * Pagination
 * Sorting (sort based on field, ascending and descending)
+* Surrogates (Enable adding elements of a different type)
 
 ## Usage
 
@@ -40,3 +41,16 @@ When enabled, the ReorderableList GUI will display a small section below the hea
 
 #### NOTE 
 *Elements can be moved between pages by right-clicking and selecting "Move Array Element"*
+
+## Surrogates
+
+Surrogates can be created to facilitate adding Objects to a ReorderableList that don't match the ReorderableList type.
+This can be achieved in two ways:
+
+1. With the [Reorderable] attribute:
+	* `[Reorderable(surrogateType = typeof(ObjectType), surrogateProperty = "objectProperty")]`
+
+2. Property of the ReorderableList:
+	* `list.surrogate = new ReorderableList.Surrogate(typeof(ObjectType), Callback);`
+
+Check the `SurrogateTest` and `SurrogateTestEditor` examples for more information
