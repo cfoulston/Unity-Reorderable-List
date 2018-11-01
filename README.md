@@ -49,7 +49,6 @@ This can be achieved in two ways:
 
 1. With the [Reorderable] attribute:
 	* `[Reorderable(surrogateType = typeof(ObjectType), surrogateProperty = "objectProperty")]`
-
 2. Property of the ReorderableList:
 	* `list.surrogate = new ReorderableList.Surrogate(typeof(ObjectType), Callback);`
 
