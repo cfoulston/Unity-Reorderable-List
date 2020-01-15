@@ -21,7 +21,7 @@ This extension can be installed using Unity package manager.
     		}
 		}
 
-* A standalone version is available under the [standalone](https://github.com/cfoulston/Unity-Reorderable-List/tree/standlone) branch, although this version is no longer maintained.  
+* A standalone version is available under the [standalone](https://github.com/cfoulston/Unity-Reorderable-List/tree/standalone) branch, although this version is no longer maintained.  
 
 ## Features
 
