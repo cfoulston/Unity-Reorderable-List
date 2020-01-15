@@ -4,6 +4,24 @@ An attempt to mimic the ReorderableList within Unity while adding some extended 
 
 ![screenshot](https://user-images.githubusercontent.com/6723783/45054643-70b46200-b042-11e8-874c-0d93a46e05a5.jpg)
 
+## Installation
+
+This extension can be installed using Unity package manager.  
+A standalone version is available under the [standalone](https://github.com/cfoulston/Unity-Reorderable-List/tree/standlone) branch, although this version is no longer maintained.  
+`https://github.com/cfoulston/Unity-Reorderable-List.git`  
+
+* Package manager UI  
+
+	![screenshot](https://user-images.githubusercontent.com/6723783/72479980-c9554c80-37aa-11ea-8fd8-978d3fa860bd.png)
+
+* Manifest
+
+		{
+    		"dependencies": {
+        		"com.malee.reorderablelist": "https://github.com/cfoulston/Unity-Reorderable-List.git"
+    		}
+		}
+
 ## Features
 
 * Drag and Drop references (like array inspector)
