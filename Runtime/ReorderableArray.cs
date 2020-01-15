@@ -1,7 +1,7 @@
-using UnityEngine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Malee {
 
@@ -25,9 +25,9 @@ namespace Malee {
 			get { return array[index]; }
 			set { array[index] = value; }
 		}
-
+		
 		public int Length {
-
+			
 			get { return array.Count; }
 		}
 

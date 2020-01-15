@@ -21,7 +21,7 @@ namespace Malee.Editor {
 			ReorderableList list = GetList(property, attribute as ReorderableAttribute, ARRAY_PROPERTY_NAME);
 
 			return list != null ? list.GetHeight() : EditorGUIUtility.singleLineHeight;
-		}
+		}		
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 
@@ -89,6 +89,7 @@ namespace Malee.Editor {
 						list.paginate = attrib.paginate;
 						list.pageSize = attrib.pageSize;
 						list.sortable = attrib.sortable;
+						list.elementLabels = attrib.labels;
 
 						//handle surrogate if any
 
