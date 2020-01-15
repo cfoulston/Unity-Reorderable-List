@@ -15,6 +15,13 @@ public class ScriptableObjectExample : ScriptableObject {
 		public bool myBool;
 		public float myValue;
 		public string myString;
+
+		public MyObject(bool myBool, float myValue, string myString) {
+
+			this.myBool = myBool;
+			this.myValue = myValue;
+			this.myString = myString;
+		}
 	}
 
 	[System.Serializable]
