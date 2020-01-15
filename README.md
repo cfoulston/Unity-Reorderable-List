@@ -7,7 +7,6 @@ An attempt to mimic the ReorderableList within Unity while adding some extended 
 ## Installation
 
 This extension can be installed using Unity package manager.  
-A standalone version is available under the [standalone](https://github.com/cfoulston/Unity-Reorderable-List/tree/standlone) branch, although this version is no longer maintained.  
 `https://github.com/cfoulston/Unity-Reorderable-List.git`  
 
 * Package manager UI  
@@ -21,6 +20,8 @@ A standalone version is available under the [standalone](https://github.com/cfou
         		"com.malee.reorderablelist": "https://github.com/cfoulston/Unity-Reorderable-List.git"
     		}
 		}
+
+* A standalone version is available under the [standalone](https://github.com/cfoulston/Unity-Reorderable-List/tree/standlone) branch, although this version is no longer maintained.  
 
 ## Features
 
