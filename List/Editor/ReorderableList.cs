@@ -10,7 +10,7 @@ namespace Malee.Editor {
 	public class ReorderableList {
 
 		private const float ELEMENT_EDGE_TOP = 1;
-		private const float ELEMENT_EDGE_BOT = 3;
+		private const float ELEMENT_EDGE_BOT = 2;
 		private const float ELEMENT_HEIGHT_OFFSET = ELEMENT_EDGE_TOP + ELEMENT_EDGE_BOT;
 
 		private static int selectionHash = "ReorderableListSelection".GetHashCode();
@@ -277,6 +277,11 @@ namespace Malee.Editor {
 			}
 		}
 
+		public float GetElementHeight(int index) {
+
+			return index >= 0 && index < Length ? GetElementHeight(list.GetArrayElementAtIndex(index)) : 0;
+		}
+
 		public void DoLayoutList() {
 
 			Rect position = EditorGUILayout.GetControlRect(false, GetHeight(), EditorStyles.largeLabel);
@@ -385,8 +390,6 @@ namespace Malee.Editor {
 
 			if (HasList) {
 
-				//TODO Validate add on multiple selected objects
-
 				list.arraySize++;
 				selection.Select(list.arraySize - 1);
 
@@ -426,8 +429,6 @@ namespace Malee.Editor {
 
 				list.DeleteArrayElementAtIndex(index);
 				selection.Remove(index);
-
-				//TODO Validate removal on multiple selected objects
 
 				if (Length > 0) {
 
@@ -897,15 +898,21 @@ namespace Malee.Editor {
 
 		private void DrawElement(SerializedProperty element, Rect rect, bool selected, bool focused) {
 
+			Rect backgroundRect = rect;
+
+#if UNITY_2019_3_OR_NEWER
+			backgroundRect.xMin++;
+			backgroundRect.xMax--;
+#endif
 			Event evt = Event.current;
 
 			if (drawElementBackgroundCallback != null) {
 
-				drawElementBackgroundCallback(rect, element, null, selected, focused);
+				drawElementBackgroundCallback(backgroundRect, element, null, selected, focused);
 			}
 			else if (evt.type == EventType.Repaint) {
 
-				Style.elementBackground.Draw(rect, false, selected, selected, focused);
+				Style.elementBackground.Draw(backgroundRect, false, selected, selected, focused);
 			}
 
 			if (evt.type == EventType.Repaint && draggable) {
@@ -1245,7 +1252,7 @@ namespace Malee.Editor {
 
 			if (element.isInstantiatedPrefab) {
 
-				menu.AddItem(new GUIContent("Revert " + GetElementLabel(element, true).text + " to Prefab"), false, selection.RevertValues, list);
+				menu.AddItem(new GUIContent($"Revert { GetElementLabel(element, true).text } to Prefab"), false, selection.RevertValues, list);
 				menu.AddSeparator(string.Empty);
 			}
 
@@ -1470,47 +1477,6 @@ namespace Malee.Editor {
 
 				evt.Use();
 			}
-
-			/* TODO This is buggy. The reason for this is to allow selection and dragging of an element using the header, or top row (if any)
-			 * The main issue here is determining whether the element has an "expandable" drop down arrow, which if it does, will capture the mouse event *without* the code below
-			 * Because of property drawers and certain property types, it's impossible to know this automatically (without dirty reflection)
-			 * So if the below code is active and we determine that the property is expandable but isn't actually. Then we'll accidently capture the mouse focus and prevent anything else from receiving it :(
-			 * So for now, in order to drag or select a row, the user must select empty space on the row. Not a huge deal, and doesn't break functionality.
-			 * What needs to happen is the drag event needs to occur independent of the event type. But that's messy too, as some controls have horizontal drag sliders :(
-			if (evt.type == EventType.MouseDown) {
-
-				//check if we contain the mouse press
-				//we also need to check what has current focus. If nothing we can assume control
-				//if there's something, check if the header has been pressed if the element is expandable
-				//if we did press the header, then override the control
-
-				if (rect.Contains(evt.mousePosition) && IsSelectionButton(evt)) {
-
-					int index = GetSelectionIndex(evt.mousePosition);
-
-					if (CanSelect(index)) {
-
-						SerializedProperty element = list.GetArrayElementAtIndex(index);
-
-						if (IsElementExpandable(element)) {
-
-							Rect elementHeaderRect = GetElementHeaderRect(element, elementRects[index]);
-							Rect elementRenderRect = GetElementRenderRect(element, elementRects[index]);
-
-							Rect elementExpandRect = elementHeaderRect;
-							elementExpandRect.xMin = elementRenderRect.xMin - 10;
-							elementExpandRect.xMax = elementRenderRect.xMin;
-
-							if (elementHeaderRect.Contains(evt.mousePosition) && !elementExpandRect.Contains(evt.mousePosition)) {
-
-								DoSelection(index, true, evt);
-								HandleUtility.Repaint();
-							}
-						}
-					}
-				}
-			}
-			*/
 		}
 
 		private void HandlePostSelection(Rect rect, Event evt) {
@@ -1876,7 +1842,7 @@ namespace Malee.Editor {
 				iconToolbarMinus = EditorGUIUtility.IconContent("Toolbar Minus", "Remove selection from list");
 				iconPagePrev = EditorGUIUtility.IconContent("Animation.PrevKey", "Previous page");
 				iconPageNext = EditorGUIUtility.IconContent("Animation.NextKey", "Next page");
-				
+
 #if UNITY_2018_3_OR_NEWER
 				iconPagePopup = EditorGUIUtility.IconContent("ShurikenPopup", "Select page");
 #else
@@ -2630,7 +2596,7 @@ namespace Malee.Editor {
 				get { return enabled && type != null; }
 			}
 
-			public Surrogate(System.Type type)
+			public Surrogate(System.Type type) 
 				: this(type, null) {
 			}
 
