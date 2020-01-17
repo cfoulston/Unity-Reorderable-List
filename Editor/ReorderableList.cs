@@ -9,8 +9,13 @@ namespace Malee.Editor {
 
 	public class ReorderableList {
 
+#if UNITY_2019_3_OR_NEWER
 		private const float ELEMENT_EDGE_TOP = 1;
 		private const float ELEMENT_EDGE_BOT = 2;
+#else
+		private const float ELEMENT_EDGE_TOP = 1;
+		private const float ELEMENT_EDGE_BOT = 3;
+#endif
 		private const float ELEMENT_HEIGHT_OFFSET = ELEMENT_EDGE_TOP + ELEMENT_EDGE_BOT;
 
 		private static int selectionHash = "ReorderableListSelection".GetHashCode();
