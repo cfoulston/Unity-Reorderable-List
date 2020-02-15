@@ -181,8 +181,8 @@ namespace Malee.Editor {
 #else
 			verticalSpacing = 2f;
 #endif
-			headerHeight = 18f;
-			footerHeight = 13f;
+			headerHeight = Style.headerBackground.fixedHeight;
+			footerHeight = Style.footerBackground.fixedHeight;
 			slideEasing = 0.15f;
 			expandable = true;
 			elementLabels = true;
@@ -615,8 +615,6 @@ namespace Malee.Editor {
 			Rect titleRect = rect;
 			titleRect.xMin += 6f;
 			titleRect.xMax -= multiline ? 95f : 55f;
-			titleRect.height -= 2f;
-			titleRect.y++;
 
 			label = EditorGUI.BeginProperty(titleRect, label, list);
 
@@ -650,7 +648,7 @@ namespace Malee.Editor {
 				bRect1.xMin = rect.xMax - 25;
 				bRect1.xMax = rect.xMax - 5;
 
-				if (GUI.Button(bRect1, Style.expandButton, Style.preButton)) {
+				if (GUI.Button(bRect1, Style.expandButton, Style.preButtonStretch)) {
 
 					ExpandElements(true);
 				}
@@ -659,7 +657,7 @@ namespace Malee.Editor {
 				bRect2.xMin = bRect1.xMin - 20;
 				bRect2.xMax = bRect1.xMin;
 
-				if (GUI.Button(bRect2, Style.collapseButton, Style.preButton)) {
+				if (GUI.Button(bRect2, Style.collapseButton, Style.preButtonStretch)) {
 
 					ExpandElements(false);
 				}
@@ -679,12 +677,12 @@ namespace Malee.Editor {
 				sortRect2.xMin = sortRect1.xMin - 20;
 				sortRect2.xMax = sortRect1.xMin;
 
-				if (EditorGUI.DropdownButton(sortRect1, Style.sortAscending, FocusType.Passive, Style.preButton)) {
+				if (EditorGUI.DropdownButton(sortRect1, Style.sortAscending, FocusType.Passive, Style.preButtonStretch)) {
 
 					SortElements(sortRect1, false);
 				}
 
-				if (EditorGUI.DropdownButton(sortRect2, Style.sortDescending, FocusType.Passive, Style.preButton)) {
+				if (EditorGUI.DropdownButton(sortRect2, Style.sortDescending, FocusType.Passive, Style.preButtonStretch)) {
 
 					SortElements(sortRect2, true);
 				}
@@ -1093,8 +1091,8 @@ namespace Malee.Editor {
 				Style.footerBackground.Draw(rect, false, false, false, false);
 			}
 
-			Rect addRect = new Rect(rect.xMin + 4f, rect.y - 3f, 25f, 13f);
-			Rect subRect = new Rect(rect.xMax - 29f, rect.y - 3f, 25f, 13f);
+			Rect addRect = new Rect(rect.xMin + 4f, rect.y, 25f, Style.preButton.fixedHeight);
+			Rect subRect = new Rect(rect.xMax - 29f, rect.y, 25f, Style.preButton.fixedHeight);
 
 			EditorGUI.BeginDisabledGroup(!canAdd);
 
@@ -1831,6 +1829,7 @@ namespace Malee.Editor {
 			internal static GUIStyle paginationHeader;
 			internal static GUIStyle boxBackground;
 			internal static GUIStyle preButton;
+			internal static GUIStyle preButtonStretch;
 			internal static GUIStyle elementBackground;
 			internal static GUIStyle verticalLabel;
 			internal static GUIContent expandButton;
@@ -1886,7 +1885,12 @@ namespace Malee.Editor {
 				verticalLabel.contentOffset = new Vector2(10, 3);
 				boxBackground = new GUIStyle("RL Background");
 				boxBackground.border = new RectOffset(6, 3, 3, 6);
+
 				preButton = new GUIStyle("RL FooterButton");
+
+				preButtonStretch = new GUIStyle("RL FooterButton");
+				preButtonStretch.fixedHeight = 0;
+				preButtonStretch.stretchHeight = true;
 
 				expandButton = EditorGUIUtility.IconContent("winbtn_win_max");
 				expandButton.tooltip = "Expand All Elements";
@@ -2601,7 +2605,7 @@ namespace Malee.Editor {
 				get { return enabled && type != null; }
 			}
 
-			public Surrogate(System.Type type) 
+			public Surrogate(System.Type type)
 				: this(type, null) {
 			}
 
