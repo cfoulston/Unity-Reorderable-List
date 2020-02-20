@@ -10,6 +10,7 @@ namespace Malee {
 		public bool draggable;
 		public bool singleLine;
 		public bool paginate;
+		public bool expanded;
 		public bool sortable;
 		public bool labels;
 		public int pageSize;
@@ -35,7 +36,7 @@ namespace Malee {
 			: this(true, true, true, elementNameProperty, elementNameOverride, elementIconPath) {
 		}
 
-		public ReorderableAttribute(bool add, bool remove, bool draggable, string elementNameProperty = null, string elementIconPath = null) 
+		public ReorderableAttribute(bool add, bool remove, bool draggable, string elementNameProperty = null, string elementIconPath = null)
 			: this(add, remove, draggable, elementNameProperty, null, elementIconPath) {
 		}
 
