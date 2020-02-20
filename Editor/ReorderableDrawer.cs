@@ -21,7 +21,7 @@ namespace Malee.Editor {
 			ReorderableList list = GetList(property, attribute as ReorderableAttribute, ARRAY_PROPERTY_NAME);
 
 			return list != null ? list.GetHeight() : EditorGUIUtility.singleLineHeight;
-		}		
+		}
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
 
@@ -85,7 +85,7 @@ namespace Malee.Editor {
 
 						ReorderableList.ElementDisplayType displayType = attrib.singleLine ? ReorderableList.ElementDisplayType.SingleLine : ReorderableList.ElementDisplayType.Auto;
 
-						list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, displayType, attrib.elementNameProperty, attrib.elementNameOverride, icon);
+						list = new ReorderableList(array, attrib.add, attrib.remove, attrib.draggable, displayType, attrib.elementNameProperty, attrib.elementNameOverride, icon, attrib.expanded);
 						list.paginate = attrib.paginate;
 						list.pageSize = attrib.pageSize;
 						list.sortable = attrib.sortable;
