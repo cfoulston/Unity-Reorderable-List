@@ -72,6 +72,7 @@ namespace Malee.Editor {
 		public GUIContent label;
 		public float headerHeight;
 		public float footerHeight;
+		public float paginationHeight;
 		public float slideEasing;
 		public float verticalSpacing;
 		public bool showDefaultBackground;
@@ -183,6 +184,12 @@ namespace Malee.Editor {
 #endif
 			headerHeight = Style.headerBackground.fixedHeight;
 			footerHeight = Style.footerBackground.fixedHeight;
+
+#if UNITY_2019_3_OR_NEWER
+			paginationHeight = 18f;
+#else
+			paginationHeight = headerHeight;
+#endif
 			slideEasing = 0.15f;
 			expandable = true;
 			elementLabels = true;
@@ -272,7 +279,7 @@ namespace Malee.Editor {
 
 			if (HasList) {
 
-				float topHeight = doPagination ? headerHeight * 2 : headerHeight;
+				float topHeight = doPagination ? headerHeight + paginationHeight : headerHeight;
 
 				return list.isExpanded ? topHeight + GetElementsHeight() + footerHeight : headerHeight;
 			}
@@ -319,10 +326,15 @@ namespace Malee.Editor {
 
 						Rect paginateHeaderRect = headerRect;
 						paginateHeaderRect.y += headerRect.height;
+						paginateHeaderRect.height = paginationHeight;
 
 						DrawPaginationHeader(paginateHeaderRect);
 
+#if UNITY_2019_3_OR_NEWER
+						headerRect.yMax = paginateHeaderRect.yMax;
+#else
 						headerRect.yMax = paginateHeaderRect.yMax - 1;
+#endif
 					}
 
 					Rect elementBackgroundRect = rect;
@@ -371,6 +383,7 @@ namespace Malee.Editor {
 					Rect footerRect = rect;
 					footerRect.yMin = elementBackgroundRect.yMax;
 					footerRect.xMin = rect.xMax - 58;
+					footerRect.height = footerHeight;
 
 					DrawFooter(footerRect);
 				}
@@ -1147,9 +1160,9 @@ namespace Malee.Editor {
 				HandleUtility.Repaint();
 			}
 
-			Rect prevRect = new Rect(rect.xMin + 4f, rect.y - 1f, 17f, 14f);
-			Rect popupRect = new Rect(prevRect.xMax, rect.y - 1f, 14f, 14f);
-			Rect nextRect = new Rect(popupRect.xMax, rect.y - 1f, 17f, 14f);
+			Rect prevRect = new Rect(rect.xMin + 4f, rect.y, 17f, rect.height - 1);
+			Rect popupRect = new Rect(prevRect.xMax, rect.y, 14f, rect.height - 1);
+			Rect nextRect = new Rect(popupRect.xMax, rect.y, 17f, rect.height - 1);
 
 			if (Event.current.type == EventType.Repaint) {
 
@@ -1159,9 +1172,7 @@ namespace Malee.Editor {
 			pageInfoContent.text = string.Format(Style.PAGE_INFO_FORMAT, pagination.page + 1, pages);
 
 			Rect pageInfoRect = rect;
-			pageInfoRect.width = Style.paginationText.CalcSize(pageInfoContent).x;
-			pageInfoRect.x = rect.xMax - pageInfoRect.width - 7;
-			pageInfoRect.y += 2;
+			pageInfoRect.xMin = rect.xMax - Style.paginationText.CalcSize(pageInfoContent).x - 7;
 
 			//draw page info
 
@@ -1169,12 +1180,12 @@ namespace Malee.Editor {
 
 			//draw page buttons and page popup
 
-			if (GUI.Button(prevRect, Style.iconPagePrev, Style.preButton)) {
+			if (GUI.Button(prevRect, Style.iconPagePrev, Style.preButtonStretch)) {
 
 				pagination.page = Mathf.Max(0, pagination.page - 1);
 			}
 
-			if (EditorGUI.DropdownButton(popupRect, Style.iconPagePopup, FocusType.Passive, Style.preButton)) {
+			if (EditorGUI.DropdownButton(popupRect, Style.iconPagePopup, FocusType.Passive, Style.preButtonStretch)) {
 
 				GenericMenu menu = new GenericMenu();
 
@@ -1188,7 +1199,7 @@ namespace Malee.Editor {
 				menu.DropDown(popupRect);
 			}
 
-			if (GUI.Button(nextRect, Style.iconPageNext, Style.preButton)) {
+			if (GUI.Button(nextRect, Style.iconPageNext, Style.preButtonStretch)) {
 
 				pagination.page = Mathf.Min(pages - 1, pagination.page + 1);
 			}
@@ -1196,31 +1207,28 @@ namespace Malee.Editor {
 			//if we're allowed to control the page size manually, show an editor
 
 			bool useFixedPageSize = pagination.fixedPageSize > 0;
+			int currentPageSize = useFixedPageSize ? pagination.fixedPageSize : pagination.customPageSize;
 
 			EditorGUI.BeginDisabledGroup(useFixedPageSize);
 
-			pageSizeContent.text = total.ToString();
+			pageSizeContent.text = currentPageSize.ToString();
 
 			GUIStyle style = Style.pageSizeTextField;
 			Texture icon = Style.listIcon.image;
 
-			float min = nextRect.xMax + 5;
-			float max = pageInfoRect.xMin - 5;
-			float space = max - min;
 			float labelWidth = icon.width + 2;
-			float width = style.CalcSize(pageSizeContent).x + 50 + labelWidth;
+			float width = style.CalcSize(pageSizeContent).x + 50;
 
 			Rect pageSizeRect = rect;
-			pageSizeRect.y--;
-			pageSizeRect.x = min + (space - width) / 2;
-			pageSizeRect.width = width - labelWidth;
+			pageSizeRect.x = rect.center.x - (width - labelWidth) / 2;
+			pageSizeRect.width = width;
 
 			EditorGUI.BeginChangeCheck();
 
 			EditorGUIUtility.labelWidth = labelWidth;
 			EditorGUIUtility.SetIconSize(new Vector2(icon.width, icon.height));
 
-			int newPageSize = EditorGUI.DelayedIntField(pageSizeRect, Style.listIcon, useFixedPageSize ? pagination.fixedPageSize : pagination.customPageSize, style);
+			int newPageSize = EditorGUI.DelayedIntField(pageSizeRect, Style.listIcon, currentPageSize, style);
 
 			EditorGUIUtility.labelWidth = 0;
 			EditorGUIUtility.SetIconSize(Vector2.zero);
@@ -1848,7 +1856,7 @@ namespace Malee.Editor {
 				iconPageNext = EditorGUIUtility.IconContent("Animation.NextKey", "Next page");
 
 #if UNITY_2018_3_OR_NEWER
-				iconPagePopup = EditorGUIUtility.IconContent("ShurikenPopup", "Select page");
+				iconPagePopup = EditorGUIUtility.IconContent("PopupCurveEditorDropDown", "Select page");
 #else
 				iconPagePopup = EditorGUIUtility.IconContent("MiniPopupNoBg", "Select page");
 #endif
@@ -1857,16 +1865,20 @@ namespace Malee.Editor {
 				paginationText.fontSize = EditorStyles.miniTextField.fontSize;
 				paginationText.font = EditorStyles.miniFont;
 				paginationText.normal.textColor = EditorStyles.miniTextField.normal.textColor;
-				paginationText.alignment = TextAnchor.UpperLeft;
+				paginationText.alignment = TextAnchor.MiddleLeft;
 				paginationText.clipping = TextClipping.Clip;
 
+#if UNITY_2019_3_OR_NEWER
+				pageSizeTextField = new GUIStyle("RL Background");
+#else
 				pageSizeTextField = new GUIStyle("RL Footer");
+				pageSizeTextField.overflow = new RectOffset(0, 0, -2, -3);
+				pageSizeTextField.contentOffset = new Vector2(0, -1);
+#endif
 				pageSizeTextField.alignment = TextAnchor.MiddleLeft;
 				pageSizeTextField.clipping = TextClipping.Clip;
 				pageSizeTextField.fixedHeight = 0;
 				pageSizeTextField.padding = new RectOffset(3, 0, 0, 0);
-				pageSizeTextField.overflow = new RectOffset(0, 0, -2, -3);
-				pageSizeTextField.contentOffset = new Vector2(0, -1);
 				pageSizeTextField.font = EditorStyles.miniFont;
 				pageSizeTextField.fontSize = EditorStyles.miniTextField.fontSize;
 				pageSizeTextField.fontStyle = FontStyle.Normal;
@@ -1875,9 +1887,14 @@ namespace Malee.Editor {
 				draggingHandle = new GUIStyle("RL DragHandle");
 				headerBackground = new GUIStyle("RL Header");
 				footerBackground = new GUIStyle("RL Footer");
-				//paginationHeader = new GUIStyle("RectangleToolHBar");
+
+#if UNITY_2019_3_OR_NEWER
+				paginationHeader = new GUIStyle("TimeRulerBackground");
+				paginationHeader.fixedHeight = 0;
+#else
 				paginationHeader = new GUIStyle("RL Element");
 				paginationHeader.border = new RectOffset(2, 3, 2, 3);
+#endif
 				elementBackground = new GUIStyle("RL Element");
 				elementBackground.border = new RectOffset(2, 3, 2, 3);
 				verticalLabel = new GUIStyle(EditorStyles.label);
@@ -1886,8 +1903,12 @@ namespace Malee.Editor {
 				boxBackground = new GUIStyle("RL Background");
 				boxBackground.border = new RectOffset(6, 3, 3, 6);
 
+#if UNITY_2019_3_OR_NEWER
 				preButton = new GUIStyle("RL FooterButton");
-
+#else
+				preButton = new GUIStyle("RL FooterButton");
+				preButton.contentOffset = new Vector2(0, -4);
+#endif
 				preButtonStretch = new GUIStyle("RL FooterButton");
 				preButtonStretch.fixedHeight = 0;
 				preButtonStretch.stretchHeight = true;
