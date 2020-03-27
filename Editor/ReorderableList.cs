@@ -182,14 +182,6 @@ namespace Malee.Editor {
 #else
 			verticalSpacing = 2f;
 #endif
-			headerHeight = Style.headerBackground.fixedHeight;
-			footerHeight = Style.footerBackground.fixedHeight;
-
-#if UNITY_2019_3_OR_NEWER
-			paginationHeight = 18f;
-#else
-			paginationHeight = headerHeight;
-#endif
 			slideEasing = 0.15f;
 			expandable = true;
 			elementLabels = true;
@@ -202,6 +194,18 @@ namespace Malee.Editor {
 			selection = new ListSelection();
 			slideGroup = new SlideGroup();
 			elementRects = new Rect[0];
+
+			//We can't access Style information yet as GUISkin hasn't loaded, so hard code the values
+
+#if UNITY_2019_3_OR_NEWER
+			headerHeight = 20f;
+			footerHeight = 20f;
+			paginationHeight = 18f;
+#else
+			headerHeight = 20f;
+			footerHeight = 13f;
+			paginationHeight = 20f;
+#endif
 		}
 
 		//
