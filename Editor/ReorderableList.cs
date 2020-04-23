@@ -1809,7 +1809,9 @@ namespace Malee.Editor {
 				case SerializedPropertyType.Vector4:
 				case SerializedPropertyType.Quaternion:
 				case SerializedPropertyType.ArraySize:
-
+#if UNITY_2019_3_OR_NEWER
+				case SerializedPropertyType.ManagedReference:
+#endif
 					return true;
 
 				default:
