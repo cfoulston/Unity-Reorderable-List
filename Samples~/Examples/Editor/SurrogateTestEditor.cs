@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using Malee.Editor;
+using Malee.List;
 
 [CustomEditor(typeof(SurrogateTest))]
 public class SurrogateTestEditor : Editor {

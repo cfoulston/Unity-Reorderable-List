@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Malee;
+using Malee.List;
 
 public class NameOverride : MonoBehaviour {
 

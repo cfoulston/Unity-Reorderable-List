@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Malee;
+using Malee.List;
 
 public class Example : MonoBehaviour {
 

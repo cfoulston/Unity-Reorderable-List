@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
-using Malee.Editor;
+using Malee.List;
 using System;
 
 [CanEditMultipleObjects]
