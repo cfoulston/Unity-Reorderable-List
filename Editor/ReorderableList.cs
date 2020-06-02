@@ -68,6 +68,7 @@ namespace Malee.List {
 		public bool draggable;
 		public bool sortable;
 		public bool expandable;
+		public bool isExpandedDefault;
 		public bool multipleSelection;
 		public GUIContent label;
 		public float headerHeight;
@@ -139,7 +140,7 @@ namespace Malee.List {
 			: this(list, canAdd, canRemove, draggable, elementDisplayType, elementNameProperty, null, elementIcon) {
 		}
 
-		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable, ElementDisplayType elementDisplayType, string elementNameProperty, string elementNameOverride, Texture elementIcon) {
+		public ReorderableList(SerializedProperty list, bool canAdd, bool canRemove, bool draggable, ElementDisplayType elementDisplayType, string elementNameProperty, string elementNameOverride, Texture elementIcon, bool isExpandedDefault = false) {
 
 			if (list == null) {
 
@@ -170,9 +171,15 @@ namespace Malee.List {
 			this.elementNameProperty = elementNameProperty;
 			this.elementNameOverride = elementNameOverride;
 			this.elementIcon = elementIcon;
+			this.isExpandedDefault = isExpandedDefault;
 
 			id = GetHashCode();
+
 			list.isExpanded = true;
+			if (!isExpandedDefault){
+				list.isExpanded = false;
+			}
+
 			label = new GUIContent(list.displayName);
 			pageInfoContent = new GUIContent();
 			pageSizeContent = new GUIContent();
