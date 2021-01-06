@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Malee.List {
 
 	[Serializable]
-	public abstract class ReorderableArray<T> : ICloneable, IList<T>, ICollection<T>, IEnumerable<T> {
+	public abstract class ReorderableArray<T> : ICloneable, IList<T>, ICollection<T>, IEnumerable<T>, IReadOnlyList<T> {
 
 		[SerializeField]
 		private List<T> array = new List<T>();
